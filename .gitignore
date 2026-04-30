@@ -1,0 +1,17 @@
+# Внутренние инструменты — не для публичного репо
+server.js
+notion-sync.js
+notion-inspect.js
+Обновить данные.command
+
+# Загрузки и черновики
+uploads/
+scraps/
+
+# Системные
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+*.log

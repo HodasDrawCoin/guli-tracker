@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1440" />
+<title>Guli Games · Investor tracker</title>
+<link rel="icon" href="assets/guli-logo.png" />
+<style>
+  :root {
+    color-scheme: dark;
+    /* warmer, richer dark palette */
+    --bg-0: #0e1014;       /* page background — slate-950, slightly cool */
+    --bg-1: #151821;       /* surface — cards */
+    --bg-2: #1c2030;       /* elevated surface */
+    --bg-3: #232838;       /* hover / active */
+    --line: rgba(255,255,255,0.07);
+    --line-2: rgba(255,255,255,0.12);
+
+    --fg-0: #f5f5f7;
+    --fg-1: #d6d8df;
+    --fg-2: #9ea2b0;
+    --fg-3: #6b7080;
+
+    /* accents — same chroma family, varied hue */
+    --accent-amber: #f59e0b;     /* warm primary */
+    --accent-amber-soft: rgba(245,158,11,0.14);
+    --accent-indigo: #818cf8;    /* cool secondary */
+    --accent-indigo-soft: rgba(129,140,248,0.16);
+    --accent-emerald: #34d399;
+    --accent-emerald-soft: rgba(52,211,153,0.14);
+    --accent-rose: #fb7185;
+    --accent-rose-soft: rgba(251,113,133,0.14);
+  }
+  * { box-sizing: border-box; }
+  html, body, #root { margin: 0; padding: 0; min-height: 100%; }
+  body {
+    background: var(--bg-0);
+    color: var(--fg-1);
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Inter",
+                 "Segoe UI", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  button { font-family: inherit; }
+  ::selection { background: rgba(245,158,11,0.35); }
+
+  /* warm vignette so it's not flat black */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(70% 50% at 0% 0%, rgba(245,158,11,0.06), transparent 60%),
+      radial-gradient(60% 50% at 100% 0%, rgba(129,140,248,0.06), transparent 55%),
+      radial-gradient(80% 50% at 50% 100%, rgba(52,211,153,0.03), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  #root { position: relative; z-index: 1; }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); border-radius: 5px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="data.js"></script>
+<script type="text/babel" src="components.jsx"></script>
+<script type="text/babel" src="app.jsx"></script>
+</body>
+</html>
