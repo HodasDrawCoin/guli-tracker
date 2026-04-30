@@ -220,7 +220,7 @@ window.__GULI_DATA__ = {
         playables: {
           label: "Playables",
           planNow: 4,
-          planTarget: 18,
+          planTarget: 42,
           inProgress: 3,
           doneThisMonth: 1,
           breakdown: {
