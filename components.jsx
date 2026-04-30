@@ -477,18 +477,14 @@ function CreoVolumeCard({ block, accent }) {
   const patchKey = label === "Креативы" ? "creo.planTarget" : "play.planTarget";
   const storageKey = "guli_target_" + patchKey;
 
-  const [planTarget, setPlanTarget] = useState(() => {
-    try {
-      const stored = localStorage.getItem(storageKey);
-      return stored !== null ? parseInt(stored) : block.planTarget;
-    } catch(e) { return block.planTarget; }
-  });
+  const isLocal = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+
+  const [planTarget, setPlanTarget] = useState(block.planTarget);
   const [saved, setSaved] = useState(false);
 
   function changeTarget(delta) {
     const newVal = Math.max(0, planTarget + delta);
     setPlanTarget(newVal);
-    try { localStorage.setItem(storageKey, String(newVal)); } catch(e) {}
     fetch("/api/patch", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -537,21 +533,25 @@ function CreoVolumeCard({ block, accent }) {
             Цель 2–3 мес
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <button onClick={() => changeTarget(-1)} style={{
-              width: 28, height: 28, borderRadius: 6, border: `1px solid ${accent}44`,
-              background: `${accent}14`, color: accent, fontSize: 18, fontWeight: 700,
-              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-              lineHeight: 1, flexShrink: 0
-            }}>−</button>
+            {isLocal && (
+              <button onClick={() => changeTarget(-1)} style={{
+                width: 28, height: 28, borderRadius: 6, border: `1px solid ${accent}44`,
+                background: `${accent}14`, color: accent, fontSize: 18, fontWeight: 700,
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                lineHeight: 1, flexShrink: 0
+              }}>−</button>
+            )}
             <div style={{ fontSize: 32, fontWeight: 700, color: accent, letterSpacing: -0.5, fontVariantNumeric: "tabular-nums", lineHeight: 1, minWidth: 36, textAlign: "center" }}>
               {planTarget}
             </div>
-            <button onClick={() => changeTarget(1)} style={{
-              width: 28, height: 28, borderRadius: 6, border: `1px solid ${accent}44`,
-              background: `${accent}14`, color: accent, fontSize: 18, fontWeight: 700,
-              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-              lineHeight: 1, flexShrink: 0
-            }}>+</button>
+            {isLocal && (
+              <button onClick={() => changeTarget(1)} style={{
+                width: 28, height: 28, borderRadius: 6, border: `1px solid ${accent}44`,
+                background: `${accent}14`, color: accent, fontSize: 18, fontWeight: 700,
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                lineHeight: 1, flexShrink: 0
+              }}>+</button>
+            )}
             {targetDelta !== 0 && (
               <span style={{
                 fontSize: 11, padding: "2px 6px", borderRadius: 4,
