@@ -472,7 +472,32 @@ function CreoProduction({ data }) {
 
 function CreoVolumeCard({ block, accent }) {
   if (!block) return null;
-  const { label, planNow, planTarget, inProgress, doneThisMonth, breakdown } = block;
+  const { label, planNow, inProgress, doneThisMonth, breakdown } = block;
+
+  const patchKey = label === "Креативы" ? "creo.planTarget" : "play.planTarget";
+  const storageKey = "guli_target_" + patchKey;
+
+  const [planTarget, setPlanTarget] = useState(() => {
+    try {
+      const stored = localStorage.getItem(storageKey);
+      return stored !== null ? parseInt(stored) : block.planTarget;
+    } catch(e) { return block.planTarget; }
+  });
+  const [saved, setSaved] = useState(false);
+
+  function changeTarget(delta) {
+    const newVal = Math.max(0, planTarget + delta);
+    setPlanTarget(newVal);
+    try { localStorage.setItem(storageKey, String(newVal)); } catch(e) {}
+    fetch("/api/patch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [patchKey]: newVal })
+    }).then(r => r.json()).then(d => {
+      if (d.ok) { setSaved(true); setTimeout(() => setSaved(false), 1500); }
+    }).catch(() => {});
+  }
+
   const targetDelta = planTarget - planNow;
   const totalSources =
     (breakdown.inhouse?.count || 0) +
@@ -511,18 +536,33 @@ function CreoVolumeCard({ block, accent }) {
           <div style={{ fontSize: 10.5, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 600, marginBottom: 4 }}>
             Цель 2–3 мес
           </div>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-            <div style={{ fontSize: 32, fontWeight: 700, color: accent, letterSpacing: -0.5, fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <button onClick={() => changeTarget(-1)} style={{
+              width: 28, height: 28, borderRadius: 6, border: `1px solid ${accent}44`,
+              background: `${accent}14`, color: accent, fontSize: 18, fontWeight: 700,
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+              lineHeight: 1, flexShrink: 0
+            }}>−</button>
+            <div style={{ fontSize: 32, fontWeight: 700, color: accent, letterSpacing: -0.5, fontVariantNumeric: "tabular-nums", lineHeight: 1, minWidth: 36, textAlign: "center" }}>
               {planTarget}
             </div>
-            {targetDelta > 0 && (
+            <button onClick={() => changeTarget(1)} style={{
+              width: 28, height: 28, borderRadius: 6, border: `1px solid ${accent}44`,
+              background: `${accent}14`, color: accent, fontSize: 18, fontWeight: 700,
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+              lineHeight: 1, flexShrink: 0
+            }}>+</button>
+            {targetDelta !== 0 && (
               <span style={{
                 fontSize: 11, padding: "2px 6px", borderRadius: 4,
                 background: `${accent}22`, color: accent, fontWeight: 700,
                 fontVariantNumeric: "tabular-nums"
               }}>
-                +{targetDelta}
+                {targetDelta > 0 ? "+" : ""}{targetDelta}
               </span>
+            )}
+            {saved && (
+              <span style={{ fontSize: 10, color: "#34d399" }}>✓ сохранено</span>
             )}
           </div>
         </div>
