@@ -203,7 +203,7 @@ window.__GULI_DATA__ = {
         creatives: {
           label: "Креативы",
           planNow: 29,
-          planTarget: 18,
+          planTarget: 43,
           inProgress: 13,
           doneThisMonth: 16,
           breakdown: {
@@ -220,7 +220,7 @@ window.__GULI_DATA__ = {
         playables: {
           label: "Playables",
           planNow: 4,
-          planTarget: 42,
+          planTarget: 45,
           inProgress: 3,
           doneThisMonth: 1,
           breakdown: {

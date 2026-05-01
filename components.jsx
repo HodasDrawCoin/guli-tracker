@@ -475,23 +475,32 @@ function CreoVolumeCard({ block, accent }) {
   const { label, planNow, inProgress, doneThisMonth, breakdown } = block;
 
   const patchKey = label === "Креативы" ? "creo.planTarget" : "play.planTarget";
-  const storageKey = "guli_target_" + patchKey;
 
   const isLocal = location.hostname === "localhost" || location.hostname === "127.0.0.1";
 
   const [planTarget, setPlanTarget] = useState(block.planTarget);
   const [saved, setSaved] = useState(false);
+  const [saveErr, setSaveErr] = useState(false);
+
+  // Регистрируем текущее значение глобально — Publish-кнопка читает его перед git push
+  useEffect(() => {
+    if (!isLocal) return;
+    if (!window.__GULI_LOCAL_TARGETS) window.__GULI_LOCAL_TARGETS = {};
+    window.__GULI_LOCAL_TARGETS[patchKey] = planTarget;
+  }, [planTarget]);
 
   function changeTarget(delta) {
     const newVal = Math.max(0, planTarget + delta);
     setPlanTarget(newVal);
+    setSaveErr(false);
     fetch("/api/patch", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ [patchKey]: newVal })
     }).then(r => r.json()).then(d => {
       if (d.ok) { setSaved(true); setTimeout(() => setSaved(false), 1500); }
-    }).catch(() => {});
+      else { setSaveErr(true); setTimeout(() => setSaveErr(false), 3000); }
+    }).catch(() => { setSaveErr(true); setTimeout(() => setSaveErr(false), 3000); });
   }
 
   const targetDelta = planTarget - planNow;
@@ -563,6 +572,9 @@ function CreoVolumeCard({ block, accent }) {
             )}
             {saved && (
               <span style={{ fontSize: 10, color: "#34d399" }}>✓ сохранено</span>
+            )}
+            {saveErr && (
+              <span style={{ fontSize: 10, color: "#f87171" }}>✗ не сохранено</span>
             )}
           </div>
         </div>
