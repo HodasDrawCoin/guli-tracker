@@ -215,6 +215,23 @@ window.__GULI_DATA__ = {
 
               ]
             }
+          },
+          calendar: {
+            done: [
+                { date: "2026-04-03", inhouse: 0, freelance: 2, outsource: 0 },
+                { date: "2026-04-07", inhouse: 1, freelance: 1, outsource: 0 },
+                { date: "2026-04-10", inhouse: 0, freelance: 3, outsource: 0 },
+                { date: "2026-04-14", inhouse: 1, freelance: 2, outsource: 0 },
+                { date: "2026-04-17", inhouse: 2, freelance: 0, outsource: 0 },
+                { date: "2026-04-22", inhouse: 0, freelance: 2, outsource: 0 },
+                { date: "2026-04-25", inhouse: 1, freelance: 1, outsource: 0 }
+            ],
+            planned: [
+                { date: "2026-05-05", inhouse: 1, freelance: 3, outsource: 0 },
+                { date: "2026-05-09", inhouse: 1, freelance: 4, outsource: 0 },
+                { date: "2026-05-14", inhouse: 1, freelance: 3, outsource: 0 },
+                { date: "2026-05-19", inhouse: 1, freelance: 2, outsource: 0 }
+            ]
           }
         },
         playables: {
@@ -232,6 +249,16 @@ window.__GULI_DATA__ = {
                 { name: "GG My.Games", count: 3, status: "active", note: "" }
               ]
             }
+          },
+          calendar: {
+            done: [
+                { date: "2026-04-28", inhouse: 0, freelance: 0, outsource: 1 }
+            ],
+            planned: [
+                { date: "2026-05-08", inhouse: 0, freelance: 0, outsource: 1 },
+                { date: "2026-05-15", inhouse: 0, freelance: 0, outsource: 1 },
+                { date: "2026-05-22", inhouse: 0, freelance: 0, outsource: 1 }
+            ]
           }
         }
       },

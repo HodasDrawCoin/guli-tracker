@@ -453,6 +453,139 @@ function CreoPipeline() {
   );
 }
 
+// ---------------------- CalendarStrip ----------------------------------------
+function CalendarStrip({ calendar, accent }) {
+  if (!calendar) return null;
+
+  const today    = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+
+  // Два месяца: предыдущий + текущий
+  const curM = today.getMonth(), curY = today.getFullYear();
+  let prevM = curM - 1, prevY = curY;
+  if (prevM < 0) { prevM = 11; prevY--; }
+
+  const MONTH_EN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
+  function buildDays(y, m) {
+    return Array.from({ length: daysInMonth(y, m) }, (_, i) => {
+      const d = i + 1;
+      return `${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    });
+  }
+
+  const months = [
+    { label: `${MONTH_EN[prevM]} ${prevY}`, days: buildDays(prevY, prevM) },
+    { label: `${MONTH_EN[curM]} ${curY}`,   days: buildDays(curY, curM) }
+  ];
+
+  // Индексы по дате
+  const doneMap = {}, plannedMap = {};
+  (calendar.done    || []).forEach(d => { doneMap[d.date]    = d; });
+  (calendar.planned || []).forEach(d => { plannedMap[d.date] = d; });
+
+  const sources = [
+    { key: "inhouse",   label: "In-house",  color: "#34d399" },
+    { key: "freelance", label: "Freelance", color: "#818cf8" },
+    { key: "outsource", label: "Outsource", color: "#f59e0b" },
+  ];
+
+  const DW = 22, DH = 19, GAP = 2, LABELW = 62;
+
+  return (
+    <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
+      <div style={{ fontSize: 10, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 600, marginBottom: 8 }}>
+        Delivery calendar
+      </div>
+      <div style={{ display: "flex" }}>
+        {/* Source labels */}
+        <div style={{ flexShrink: 0, width: LABELW, display: "flex", flexDirection: "column", gap: GAP, paddingTop: 22 }}>
+          {sources.map(s => (
+            <div key={s.key} style={{ height: DH, display: "flex", alignItems: "center",
+              fontSize: 9, color: s.color, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.3 }}>
+              {s.label}
+            </div>
+          ))}
+        </div>
+
+        {/* Scrollable calendar */}
+        <div style={{ flex: 1, overflowX: "auto" }}>
+          <div style={{ display: "flex", gap: 10, paddingBottom: 4, minWidth: "max-content" }}>
+            {months.map(({ label, days }) => (
+              <div key={label}>
+                {/* Month label */}
+                <div style={{ fontSize: 9, color: "var(--fg-3)", fontWeight: 700, letterSpacing: 0.5,
+                  textTransform: "uppercase", marginBottom: 4 }}>
+                  {label}
+                </div>
+                {/* Day numbers */}
+                <div style={{ display: "flex", gap: GAP, marginBottom: 4 }}>
+                  {days.map(dateStr => {
+                    const day = parseInt(dateStr.split("-")[2]);
+                    const isToday = dateStr === todayStr;
+                    return (
+                      <div key={dateStr} style={{ width: DW, textAlign: "center",
+                        fontSize: 7.5, fontWeight: isToday ? 800 : 400,
+                        color: isToday ? accent : "var(--fg-3)" }}>
+                        {day}
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Source rows */}
+                {sources.map(src => (
+                  <div key={src.key} style={{ display: "flex", gap: GAP, marginBottom: GAP }}>
+                    {days.map(dateStr => {
+                      const done    = doneMap[dateStr]    || {};
+                      const planned = plannedMap[dateStr] || {};
+                      const dc = done[src.key]    || 0;
+                      const pc = planned[src.key] || 0;
+                      const total = dc + pc;
+                      const isToday = dateStr === todayStr;
+                      if (total === 0) {
+                        return (
+                          <div key={dateStr} style={{ width: DW, height: DH, borderRadius: 3,
+                            background: isToday ? `${src.color}12` : "rgba(255,255,255,0.025)",
+                            border: isToday ? `1px solid ${src.color}33` : "1px solid rgba(255,255,255,0.04)" }} />
+                        );
+                      }
+                      const isDone = dc > 0;
+                      return (
+                        <div key={dateStr} style={{ width: DW, height: DH, borderRadius: 3,
+                          background: isDone ? `${src.color}bb` : `${src.color}20`,
+                          border: `1px solid ${src.color}${isDone ? "99" : "55"}`,
+                          borderStyle: !isDone ? "dashed" : "solid",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 9, fontWeight: 700, fontVariantNumeric: "tabular-nums",
+                          color: isDone ? "#fff" : src.color }}>
+                          {total}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div style={{ display: "flex", gap: 10, marginTop: 6, alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <div style={{ width: 10, height: 10, borderRadius: 2, background: "rgba(255,255,255,0.45)" }} />
+          <span style={{ fontSize: 9, color: "var(--fg-3)" }}>Done</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <div style={{ width: 10, height: 10, borderRadius: 2, border: "1px dashed rgba(255,255,255,0.3)" }} />
+          <span style={{ fontSize: 9, color: "var(--fg-3)" }}>Planned</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ---------------------- Creo Production Dashboard ---------------------------
 // Большой блок «факт / план / прогресс / разбивка» для креативов и playables.
 function CreoProduction({ data }) {
@@ -518,7 +651,7 @@ function CreoVolumeCard({ block, accent }) {
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
         <div style={{ fontSize: 11, color: accent, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700 }}>
-          {label} · объёмы
+          {label === "Креативы" ? "Creatives" : label}
         </div>
         <div style={{ fontSize: 11, color: "var(--fg-3)" }}>шт. / мес</div>
       </div>
@@ -632,6 +765,9 @@ function CreoVolumeCard({ block, accent }) {
           />
         </div>
       </div>
+
+      {/* Delivery calendar */}
+      <CalendarStrip calendar={block.calendar} accent={accent} />
     </div>
   );
 }
