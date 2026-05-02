@@ -5,10 +5,10 @@ const { useState, useEffect, useMemo, useRef } = React;
 
 // ---------------------- Палитра по статусам ---------------------------------
 const STATUS_META = {
-  done:        { label: "Готово",        dot: "#34d399", bg: "rgba(52,211,153,0.12)",  fg: "#86efac", border: "rgba(52,211,153,0.30)" },
-  in_progress: { label: "В работе",      dot: "#f59e0b", bg: "rgba(245,158,11,0.14)",  fg: "#fcd34d", border: "rgba(245,158,11,0.32)" },
-  blocked:     { label: "Заблокировано", dot: "#fb7185", bg: "rgba(251,113,133,0.14)", fg: "#fda4af", border: "rgba(251,113,133,0.30)" },
-  planned:     { label: "Запланировано", dot: "#818cf8", bg: "rgba(129,140,248,0.14)", fg: "#c7d2fe", border: "rgba(129,140,248,0.30)" }
+  done:        { label: "Done",        dot: "#34d399", bg: "rgba(52,211,153,0.12)",  fg: "#86efac", border: "rgba(52,211,153,0.30)" },
+  in_progress: { label: "In progress", dot: "#f59e0b", bg: "rgba(245,158,11,0.14)",  fg: "#fcd34d", border: "rgba(245,158,11,0.32)" },
+  blocked:     { label: "Blocked",     dot: "#fb7185", bg: "rgba(251,113,133,0.14)", fg: "#fda4af", border: "rgba(251,113,133,0.30)" },
+  planned:     { label: "Planned",     dot: "#818cf8", bg: "rgba(129,140,248,0.14)", fg: "#c7d2fe", border: "rgba(129,140,248,0.30)" }
 };
 
 function fmtDate(s) {
@@ -173,13 +173,37 @@ function LeverCard({ lever, defaultOpen = false }) {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--fg-3)" }}>
-            <span style={{ textTransform: "uppercase", letterSpacing: 0.4 }}>Прогресс</span>
-            <span style={{ color: meta.fg, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
-              {lever.progress}%
-            </span>
-          </div>
-          <ProgressBar value={lever.progress} status={lever.status} />
+          {lever.progressDots ? (() => {
+            const { filled, total, label } = lever.progressDots;
+            return (
+              <>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--fg-3)" }}>
+                  <span style={{ textTransform: "uppercase", letterSpacing: 0.4 }}>{label || "Состав"}</span>
+                  <span style={{ color: meta.fg, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{filled} / {total}</span>
+                </div>
+                <div style={{ display: "flex", gap: 3, flexWrap: "wrap", marginTop: 2 }}>
+                  {Array.from({ length: total }, (_, i) => (
+                    <div key={i} style={{
+                      width: 14, height: 14, borderRadius: 3,
+                      background: i < filled ? meta.dot : "transparent",
+                      border: `1.5px solid ${i < filled ? meta.dot : "rgba(255,255,255,0.15)"}`,
+                      boxShadow: i < filled ? `0 0 6px ${meta.dot}66` : "none"
+                    }} />
+                  ))}
+                </div>
+              </>
+            );
+          })() : (
+            <>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--fg-3)" }}>
+                <span style={{ textTransform: "uppercase", letterSpacing: 0.4 }}>Прогресс</span>
+                <span style={{ color: meta.fg, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+                  {lever.progress}%
+                </span>
+              </div>
+              <ProgressBar value={lever.progress} status={lever.status} />
+            </>
+          )}
         </div>
 
         <div style={{
@@ -207,7 +231,7 @@ function LeverCard({ lever, defaultOpen = false }) {
           <div>
             {lever.nextSteps?.length > 0 && (
               <div style={{ marginBottom: 16 }}>
-                <SectionLabel>Следующие шаги</SectionLabel>
+                <SectionLabel>{lever.stepsLabel || "Следующие шаги"}</SectionLabel>
                 <ol style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
                   {lever.nextSteps.map((s, i) => (
                     <li key={i} style={{ display: "flex", gap: 10, fontSize: 13, color: "var(--fg-1)", lineHeight: 1.5 }}>
@@ -261,8 +285,19 @@ function LeverCard({ lever, defaultOpen = false }) {
           <div>
             {lever.metrics && Object.keys(lever.metrics).length > 0 && (
               <div style={{ marginBottom: 14 }}>
-                <SectionLabel>Метрики</SectionLabel>
-                {Object.entries(lever.metrics).map(([k, v]) => <KV key={k} label={k}>{v}</KV>)}
+                <SectionLabel>Показатели</SectionLabel>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                  {Object.entries(lever.metrics).map(([k, v]) => (
+                    <div key={k} style={{
+                      background: meta.bg,
+                      border: `1px solid ${meta.border}`,
+                      borderRadius: 8, padding: "8px 10px"
+                    }}>
+                      <div style={{ fontSize: 10, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>{k}</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: meta.fg, fontVariantNumeric: "tabular-nums", lineHeight: 1.2 }}>{v}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -292,7 +327,7 @@ function LeverCard({ lever, defaultOpen = false }) {
 
 // ---------------------- Roadmap (Gantt-lite) --------------------------------
 function RoadmapStrip({ levers }) {
-  const months = ["Апр","Май","Июн","Июл","Авг","Сен"];
+  const months = ["Apr","May","Jun","Jul","Aug","Sep"];
   function parseTarget(t) {
     if (!t) return null;
     if (/^Live$/i.test(t)) return 0;
@@ -304,7 +339,7 @@ function RoadmapStrip({ levers }) {
   }
   return (
     <Card padding={16}>
-      <SectionLabel right={<span style={{ fontSize: 11, color: "var(--fg-3)" }}>след. 6 месяцев</span>}>
+      <SectionLabel right={<span style={{ fontSize: 11, color: "var(--fg-3)" }}>next 6 months</span>}>
         Roadmap
       </SectionLabel>
       <div style={{
@@ -453,34 +488,31 @@ function CreoPipeline() {
   );
 }
 
-// ---------------------- CalendarStrip ----------------------------------------
-function CalendarStrip({ calendar, accent }) {
+// ---------------------- SourceCalendar (источники + календарь) ---------------
+function SourceCalendar({ calendar, accent, period }) {
   if (!calendar) return null;
 
   const today    = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
-
-  // Два месяца: предыдущий + текущий
   const curM = today.getMonth(), curY = today.getFullYear();
   let prevM = curM - 1, prevY = curY;
   if (prevM < 0) { prevM = 11; prevY--; }
 
-  const MONTH_EN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const MONTH_EN = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
-  function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
   function buildDays(y, m) {
-    return Array.from({ length: daysInMonth(y, m) }, (_, i) => {
+    const n = new Date(y, m + 1, 0).getDate();
+    return Array.from({ length: n }, (_, i) => {
       const d = i + 1;
       return `${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
     });
   }
 
   const months = [
-    { label: `${MONTH_EN[prevM]} ${prevY}`, days: buildDays(prevY, prevM) },
-    { label: `${MONTH_EN[curM]} ${curY}`,   days: buildDays(curY, curM) }
+    { label: `${MONTH_EN[prevM]} ${prevY}`, days: buildDays(prevY, prevM), year: prevY, month: prevM },
+    { label: `${MONTH_EN[curM]}  ${curY}`,  days: buildDays(curY,  curM),  year: curY,  month: curM  }
   ];
 
-  // Индексы по дате
   const doneMap = {}, plannedMap = {};
   (calendar.done    || []).forEach(d => { doneMap[d.date]    = d; });
   (calendar.planned || []).forEach(d => { plannedMap[d.date] = d; });
@@ -491,94 +523,224 @@ function CalendarStrip({ calendar, accent }) {
     { key: "outsource", label: "Outsource", color: "#f59e0b" },
   ];
 
-  const DW = 22, DH = 19, GAP = 2, LABELW = 62;
+  function getMonthTotals(y, m) {
+    const ms = `${y}-${String(m+1).padStart(2,"0")}`;
+    const t = { inhouse: 0, freelance: 0, outsource: 0 };
+    [...(calendar.done || []), ...(calendar.planned || [])]
+      .filter(d => d.date.startsWith(ms))
+      .forEach(d => { t.inhouse += d.inhouse||0; t.freelance += d.freelance||0; t.outsource += d.outsource||0; });
+    return t;
+  }
+
+  const LABELW = 66, TOTALW = 46;
 
   return (
-    <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
-      <div style={{ fontSize: 10, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 600, marginBottom: 8 }}>
-        Delivery calendar
-      </div>
-      <div style={{ display: "flex" }}>
-        {/* Source labels */}
-        <div style={{ flexShrink: 0, width: LABELW, display: "flex", flexDirection: "column", gap: GAP, paddingTop: 22 }}>
-          {sources.map(s => (
-            <div key={s.key} style={{ height: DH, display: "flex", alignItems: "center",
-              fontSize: 9, color: s.color, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.3 }}>
-              {s.label}
+    <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--line)" }}>
+      {months.map(({ label, days, year, month }, idx) => {
+        const mt    = getMonthTotals(year, month);
+        const mSum  = mt.inhouse + mt.freelance + mt.outsource;
+        return (
+          <div key={label} style={{ marginBottom: 10 }}>
+            {idx > 0 && (
+              <div style={{ height: 1, background: "var(--line-2)", margin: "10px 0 12px" }} />
+            )}
+            {/* Заголовок месяца */}
+            <div style={{ fontSize: 9.5, color: "var(--fg-2)", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>
+              {label}
             </div>
-          ))}
-        </div>
-
-        {/* Scrollable calendar */}
-        <div style={{ flex: 1, overflowX: "auto" }}>
-          <div style={{ display: "flex", gap: 10, paddingBottom: 4, minWidth: "max-content" }}>
-            {months.map(({ label, days }) => (
-              <div key={label}>
-                {/* Month label */}
-                <div style={{ fontSize: 9, color: "var(--fg-3)", fontWeight: 700, letterSpacing: 0.5,
-                  textTransform: "uppercase", marginBottom: 4 }}>
-                  {label}
-                </div>
-                {/* Day numbers */}
-                <div style={{ display: "flex", gap: GAP, marginBottom: 4 }}>
-                  {days.map(dateStr => {
-                    const day = parseInt(dateStr.split("-")[2]);
-                    const isToday = dateStr === todayStr;
-                    return (
-                      <div key={dateStr} style={{ width: DW, textAlign: "center",
-                        fontSize: 7.5, fontWeight: isToday ? 800 : 400,
-                        color: isToday ? accent : "var(--fg-3)" }}>
-                        {day}
-                      </div>
-                    );
-                  })}
-                </div>
-                {/* Source rows */}
-                {sources.map(src => (
-                  <div key={src.key} style={{ display: "flex", gap: GAP, marginBottom: GAP }}>
+            {/* Числа дней */}
+            <div style={{ display: "flex", alignItems: "center", marginBottom: 3 }}>
+              <div style={{ width: LABELW, flexShrink: 0 }} />
+              <div style={{ flex: 1, display: "grid", gridTemplateColumns: `repeat(${days.length}, 1fr)`, gap: 1 }}>
+                {days.map(dateStr => {
+                  const day = parseInt(dateStr.split("-")[2]);
+                  const isToday = dateStr === todayStr;
+                  return (
+                    <div key={dateStr} style={{ textAlign: "center", fontSize: 7, lineHeight: 1.2,
+                      color: isToday ? accent : "var(--fg-3)", fontWeight: isToday ? 800 : 400 }}>
+                      {day}
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ width: TOTALW, flexShrink: 0 }} />
+            </div>
+            {/* Строки по источникам */}
+            {sources.map(src => {
+              const srcTotal = mt[src.key] || 0;
+              const srcPct   = mSum ? Math.round(srcTotal / mSum * 100) : 0;
+              return (
+                <div key={src.key} style={{ display: "flex", alignItems: "center", marginBottom: 2 }}>
+                  {/* Лейбл */}
+                  <div style={{ width: LABELW, flexShrink: 0, display: "flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ width: 7, height: 7, borderRadius: 2, background: src.color, flexShrink: 0 }} />
+                    <span style={{ fontSize: 10, color: "var(--fg-2)", fontWeight: 500, whiteSpace: "nowrap" }}>{src.label}</span>
+                  </div>
+                  {/* Квадраты */}
+                  <div style={{ flex: 1, display: "grid", gridTemplateColumns: `repeat(${days.length}, 1fr)`, gap: 1 }}>
                     {days.map(dateStr => {
                       const done    = doneMap[dateStr]    || {};
                       const planned = plannedMap[dateStr] || {};
                       const dc = done[src.key]    || 0;
                       const pc = planned[src.key] || 0;
-                      const total = dc + pc;
-                      const isToday = dateStr === todayStr;
-                      if (total === 0) {
-                        return (
-                          <div key={dateStr} style={{ width: DW, height: DH, borderRadius: 3,
-                            background: isToday ? `${src.color}12` : "rgba(255,255,255,0.025)",
-                            border: isToday ? `1px solid ${src.color}33` : "1px solid rgba(255,255,255,0.04)" }} />
-                        );
-                      }
-                      const isDone = dc > 0;
+                      const tot = dc + pc;
+                      const isToday  = dateStr === todayStr;
+                      const isDone   = dc > 0;
+                      if (tot === 0) return (
+                        <div key={dateStr} style={{ aspectRatio: "1", borderRadius: 2,
+                          background: isToday ? `${src.color}15` : "rgba(255,255,255,0.03)",
+                          border: `1px solid ${isToday ? src.color+"30" : "rgba(255,255,255,0.05)"}` }} />
+                      );
                       return (
-                        <div key={dateStr} style={{ width: DW, height: DH, borderRadius: 3,
-                          background: isDone ? `${src.color}bb` : `${src.color}20`,
-                          border: `1px solid ${src.color}${isDone ? "99" : "55"}`,
-                          borderStyle: !isDone ? "dashed" : "solid",
+                        <div key={dateStr} style={{ aspectRatio: "1", borderRadius: 2,
+                          background: isDone ? `${src.color}cc` : `${src.color}22`,
+                          border: `1px solid ${src.color}${isDone ? "99" : "44"}`,
+                          borderStyle: isDone ? "solid" : "dashed",
                           display: "flex", alignItems: "center", justifyContent: "center",
-                          fontSize: 9, fontWeight: 700, fontVariantNumeric: "tabular-nums",
+                          fontSize: 8, fontWeight: 700, fontVariantNumeric: "tabular-nums",
                           color: isDone ? "#fff" : src.color }}>
-                          {total}
+                          {tot}
                         </div>
                       );
                     })}
                   </div>
-                ))}
-              </div>
-            ))}
+                  {/* Итог */}
+                  <div style={{ width: TOTALW, flexShrink: 0, textAlign: "right", paddingLeft: 6, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 3 }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "var(--fg-0)", fontVariantNumeric: "tabular-nums" }}>{srcTotal}</span>
+                    {mSum > 0 && <span style={{ fontSize: 9, color: "var(--fg-3)" }}>{srcPct}%</span>}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div style={{ display: "flex", gap: 10, marginTop: 6, alignItems: "center" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <div style={{ width: 10, height: 10, borderRadius: 2, background: "rgba(255,255,255,0.45)" }} />
+        );
+      })}
+      {/* Легенда */}
+      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+          <div style={{ width: 8, height: 8, borderRadius: 2, background: "rgba(255,255,255,0.4)" }} />
           <span style={{ fontSize: 9, color: "var(--fg-3)" }}>Done</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <div style={{ width: 10, height: 10, borderRadius: 2, border: "1px dashed rgba(255,255,255,0.3)" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+          <div style={{ width: 8, height: 8, borderRadius: 2, border: "1px dashed rgba(255,255,255,0.3)" }} />
+          <span style={{ fontSize: 9, color: "var(--fg-3)" }}>Planned</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------- CalendarStrip (legacy, заменён SourceCalendar) --------
+function CalendarStrip({ calendar, accent }) {
+  if (!calendar) return null;
+
+  const today    = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+
+  const curM = today.getMonth(), curY = today.getFullYear();
+  let prevM = curM - 1, prevY = curY;
+  if (prevM < 0) { prevM = 11; prevY--; }
+
+  const MONTH_EN = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+  function buildDays(y, m) {
+    const n = new Date(y, m + 1, 0).getDate();
+    return Array.from({ length: n }, (_, i) => {
+      const d = i + 1;
+      return `${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    });
+  }
+
+  const months = [
+    { label: `${MONTH_EN[prevM]} ${prevY}`, days: buildDays(prevY, prevM) },
+    { label: `${MONTH_EN[curM]} ${curY}`,   days: buildDays(curY, curM) }
+  ];
+
+  const doneMap = {}, plannedMap = {};
+  (calendar.done    || []).forEach(d => { doneMap[d.date]    = d; });
+  (calendar.planned || []).forEach(d => { plannedMap[d.date] = d; });
+
+  const sources = [
+    { key: "inhouse",   label: "In-house",  color: "#34d399" },
+    { key: "freelance", label: "Freelance", color: "#818cf8" },
+    { key: "outsource", label: "Outsource", color: "#f59e0b" },
+  ];
+
+  const DH = 14;
+
+  return (
+    <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--line)" }}>
+      <div style={{ fontSize: 10, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 600, marginBottom: 6 }}>
+        Delivery calendar
+      </div>
+
+      {/* Месяцы — один под другим */}
+      {months.map(({ label, days }) => (
+        <div key={label} style={{ marginBottom: 8 }}>
+          <div style={{ fontSize: 9, color: "var(--fg-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>
+            {label}
+          </div>
+          {/* Числа дней */}
+          <div style={{ display: "grid", gridTemplateColumns: `repeat(${days.length}, 1fr)`, gap: 1, marginBottom: 2 }}>
+            {days.map(dateStr => {
+              const day = parseInt(dateStr.split("-")[2]);
+              const isToday = dateStr === todayStr;
+              return (
+                <div key={dateStr} style={{ textAlign: "center", fontSize: 7,
+                  color: isToday ? accent : "var(--fg-3)", fontWeight: isToday ? 800 : 400 }}>
+                  {day}
+                </div>
+              );
+            })}
+          </div>
+          {/* Строки по источникам */}
+          {sources.map(src => (
+            <div key={src.key} style={{ display: "grid", gridTemplateColumns: `repeat(${days.length}, 1fr)`, gap: 1, marginBottom: 1 }}>
+              {days.map(dateStr => {
+                const done    = doneMap[dateStr]    || {};
+                const planned = plannedMap[dateStr] || {};
+                const dc    = done[src.key]    || 0;
+                const pc    = planned[src.key] || 0;
+                const total = dc + pc;
+                const isToday = dateStr === todayStr;
+                const isDone  = dc > 0;
+                if (total === 0) {
+                  return <div key={dateStr} style={{ height: DH, borderRadius: 2,
+                    background: isToday ? `${src.color}15` : "rgba(255,255,255,0.03)",
+                    border: `1px solid ${isToday ? src.color+"30" : "rgba(255,255,255,0.05)"}` }} />;
+                }
+                return (
+                  <div key={dateStr} style={{ height: DH, borderRadius: 2,
+                    background: isDone ? `${src.color}cc` : `${src.color}22`,
+                    border: `1px solid ${src.color}${isDone ? "99" : "55"}`,
+                    borderStyle: isDone ? "solid" : "dashed",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 8, fontWeight: 700, fontVariantNumeric: "tabular-nums",
+                    color: isDone ? "#fff" : src.color }}>
+                    {total}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      ))}
+
+      {/* Легенда */}
+      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+        {sources.map(s => (
+          <div key={s.key} style={{ display: "flex", alignItems: "center", gap: 3 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 2, background: s.color }} />
+            <span style={{ fontSize: 9, color: "var(--fg-3)" }}>{s.label}</span>
+          </div>
+        ))}
+        <div style={{ width: 1, height: 10, background: "var(--line)", margin: "0 2px" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+          <div style={{ width: 8, height: 8, borderRadius: 2, background: "rgba(255,255,255,0.4)" }} />
+          <span style={{ fontSize: 9, color: "var(--fg-3)" }}>Done</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+          <div style={{ width: 8, height: 8, borderRadius: 2, border: "1px dashed rgba(255,255,255,0.3)" }} />
           <span style={{ fontSize: 9, color: "var(--fg-3)" }}>Planned</span>
         </div>
       </div>
@@ -587,7 +749,6 @@ function CalendarStrip({ calendar, accent }) {
 }
 
 // ---------------------- Creo Production Dashboard ---------------------------
-// Большой блок «факт / план / прогресс / разбивка» для креативов и playables.
 function CreoProduction({ data }) {
   if (!data) return null;
   const blocks = [
@@ -595,17 +756,17 @@ function CreoProduction({ data }) {
     { key: "playables", accent: "#34d399", data: data.playables }
   ];
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16, alignItems: "start" }}>
       {blocks.map(b => (
-        <CreoVolumeCard key={b.key} accent={b.accent} block={b.data} />
+        <CreoVolumeCard key={b.key} accent={b.accent} block={b.data} period={data.period} />
       ))}
     </div>
   );
 }
 
-function CreoVolumeCard({ block, accent }) {
+function CreoVolumeCard({ block, accent, period }) {
   if (!block) return null;
-  const { label, planNow, inProgress, doneThisMonth, breakdown } = block;
+  const { label, planNow } = block;
 
   const patchKey = label === "Креативы" ? "creo.planTarget" : "play.planTarget";
 
@@ -637,10 +798,31 @@ function CreoVolumeCard({ block, accent }) {
   }
 
   const targetDelta = planTarget - planNow;
-  const totalSources =
-    (breakdown.inhouse?.count || 0) +
-    (breakdown.freelance?.count || 0) +
-    (breakdown.outsource?.count || 0);
+
+  // Месячные суммы из calendar
+  const SHORT_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  function calMonthSum(arr, y, m) {
+    const prefix = `${y}-${String(m + 1).padStart(2, "0")}`;
+    return (arr || []).filter(d => d.date.startsWith(prefix))
+      .reduce((s, d) => s + (d.inhouse || 0) + (d.freelance || 0) + (d.outsource || 0), 0);
+  }
+  const now2   = new Date();
+  const curY   = now2.getFullYear();
+  const curM   = now2.getMonth();          // 0-indexed
+  const prevM  = curM === 0 ? 11 : curM - 1;
+  const prevY  = curM === 0 ? curY - 1 : curY;
+  const nextM  = curM === 11 ? 0 : curM + 1;
+  const nextY  = curM === 11 ? curY + 1 : curY;
+
+  const cal        = block.calendar || {};
+  const sdanoPrev  = calMonthSum(cal.done,    prevY, prevM);
+  const sdanoCur   = calMonthSum(cal.done,    curY,  curM);
+  const workCur    = calMonthSum(cal.planned, curY,  curM);
+  const workNext   = calMonthSum(cal.planned, nextY, nextM);
+
+  const prevShort  = SHORT_MONTHS[prevM];
+  const curShort   = SHORT_MONTHS[curM];
+  const nextShort  = SHORT_MONTHS[nextM];
 
   return (
     <div style={{
@@ -649,125 +831,90 @@ function CreoVolumeCard({ block, accent }) {
       borderTop: `3px solid ${accent}`,
       borderRadius: 10, padding: 16
     }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
+      {/* Заголовок: название слева, цель справа */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <div style={{ fontSize: 11, color: accent, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700 }}>
           {label === "Креативы" ? "Creatives" : label}
         </div>
-        <div style={{ fontSize: 11, color: "var(--fg-3)" }}>шт. / мес</div>
+        {/* Цель — компактно справа */}
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <span style={{ fontSize: 9, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: 0.4, fontWeight: 600 }}>Target</span>
+          {isLocal && (
+            <button onClick={() => changeTarget(-1)} style={{
+              width: 20, height: 20, borderRadius: 4, border: `1px solid ${accent}44`,
+              background: `${accent}14`, color: accent, fontSize: 14, fontWeight: 700,
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+              lineHeight: 1, flexShrink: 0
+            }}>−</button>
+          )}
+          <span style={{ fontSize: 16, fontWeight: 700, color: accent, fontVariantNumeric: "tabular-nums", minWidth: 24, textAlign: "center" }}>
+            {planTarget}
+          </span>
+          {isLocal && (
+            <button onClick={() => changeTarget(1)} style={{
+              width: 20, height: 20, borderRadius: 4, border: `1px solid ${accent}44`,
+              background: `${accent}14`, color: accent, fontSize: 14, fontWeight: 700,
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+              lineHeight: 1, flexShrink: 0
+            }}>+</button>
+          )}
+          {targetDelta !== 0 && (
+            <span style={{
+              fontSize: 10, padding: "1px 5px", borderRadius: 4,
+              background: `${accent}22`, color: accent, fontWeight: 700,
+              fontVariantNumeric: "tabular-nums"
+            }}>
+              {targetDelta > 0 ? "+" : ""}{targetDelta}
+            </span>
+          )}
+          {saved && <span style={{ fontSize: 9, color: "#34d399" }}>✓</span>}
+          {saveErr && <span style={{ fontSize: 9, color: "#f87171" }}>✗</span>}
+        </div>
       </div>
 
-      {/* План сейчас → план через 2-3 мес */}
-      <div style={{
-        display: "grid", gridTemplateColumns: "1fr auto 1fr",
-        gap: 12, alignItems: "center", marginBottom: 14
-      }}>
-        <div>
-          <div style={{ fontSize: 10.5, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 600, marginBottom: 4 }}>
-            Сейчас планируем
+      {/* Текущий статус — два месяца каждый блок */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+
+        {/* В работе */}
+        <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.07)", borderLeft: "3px solid rgba(245,158,11,0.5)" }}>
+          <div style={{ fontSize: 12, color: "#fcd34d", textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, marginBottom: 10 }}>
+            In progress
           </div>
-          <div style={{ fontSize: 32, fontWeight: 700, color: "var(--fg-0)", letterSpacing: -0.5, fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>
-            {planNow}
-          </div>
-        </div>
-        <div style={{ color: accent, fontSize: 18, opacity: 0.7 }}>→</div>
-        <div>
-          <div style={{ fontSize: 10.5, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 600, marginBottom: 4 }}>
-            Цель 2–3 мес
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            {isLocal && (
-              <button onClick={() => changeTarget(-1)} style={{
-                width: 28, height: 28, borderRadius: 6, border: `1px solid ${accent}44`,
-                background: `${accent}14`, color: accent, fontSize: 18, fontWeight: 700,
-                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                lineHeight: 1, flexShrink: 0
-              }}>−</button>
-            )}
-            <div style={{ fontSize: 32, fontWeight: 700, color: accent, letterSpacing: -0.5, fontVariantNumeric: "tabular-nums", lineHeight: 1, minWidth: 36, textAlign: "center" }}>
-              {planTarget}
+          <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 10, color: "rgba(252,211,77,0.55)", fontWeight: 500, marginBottom: 3 }}>{curShort}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: "var(--fg-0)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{workCur}</div>
             </div>
-            {isLocal && (
-              <button onClick={() => changeTarget(1)} style={{
-                width: 28, height: 28, borderRadius: 6, border: `1px solid ${accent}44`,
-                background: `${accent}14`, color: accent, fontSize: 18, fontWeight: 700,
-                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                lineHeight: 1, flexShrink: 0
-              }}>+</button>
-            )}
-            {targetDelta !== 0 && (
-              <span style={{
-                fontSize: 11, padding: "2px 6px", borderRadius: 4,
-                background: `${accent}22`, color: accent, fontWeight: 700,
-                fontVariantNumeric: "tabular-nums"
-              }}>
-                {targetDelta > 0 ? "+" : ""}{targetDelta}
-              </span>
-            )}
-            {saved && (
-              <span style={{ fontSize: 10, color: "#34d399" }}>✓ сохранено</span>
-            )}
-            {saveErr && (
-              <span style={{ fontSize: 10, color: "#f87171" }}>✗ не сохранено</span>
-            )}
+            <div style={{ width: 1, height: 34, background: "rgba(245,158,11,0.15)", margin: "0 12px" }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 10, color: "rgba(252,211,77,0.35)", fontWeight: 500, marginBottom: 3 }}>{nextShort}</div>
+              <div style={{ fontSize: 20, fontWeight: 600, color: "var(--fg-0)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{workNext}</div>
+            </div>
           </div>
         </div>
+
+        {/* Сдано */}
+        <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(52,211,153,0.07)", borderLeft: "3px solid rgba(52,211,153,0.4)" }}>
+          <div style={{ fontSize: 12, color: "#86efac", textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, marginBottom: 10 }}>
+            Delivered
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 10, color: "rgba(134,239,172,0.35)", fontWeight: 500, marginBottom: 3 }}>{prevShort}</div>
+              <div style={{ fontSize: 20, fontWeight: 600, color: "var(--fg-0)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{sdanoPrev}</div>
+            </div>
+            <div style={{ width: 1, height: 34, background: "rgba(52,211,153,0.15)", margin: "0 12px" }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 10, color: "rgba(134,239,172,0.55)", fontWeight: 500, marginBottom: 3 }}>{curShort}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: "var(--fg-0)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{sdanoCur}</div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      {/* Текущий статус */}
-      <div style={{
-        display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14
-      }}>
-        <div style={{
-          padding: "10px 12px", borderRadius: 6,
-          background: "rgba(245,158,11,0.10)",
-          border: "1px solid rgba(245,158,11,0.25)"
-        }}>
-          <div style={{ fontSize: 10, color: "#fcd34d", textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 600 }}>В работе</div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: "var(--fg-0)", fontVariantNumeric: "tabular-nums", marginTop: 2 }}>{inProgress}</div>
-        </div>
-        <div style={{
-          padding: "10px 12px", borderRadius: 6,
-          background: "rgba(52,211,153,0.10)",
-          border: "1px solid rgba(52,211,153,0.25)"
-        }}>
-          <div style={{ fontSize: 10, color: "#86efac", textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 600 }}>Сделано в месяце</div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: "var(--fg-0)", fontVariantNumeric: "tabular-nums", marginTop: 2 }}>{doneThisMonth}</div>
-        </div>
-      </div>
-
-      {/* Разбивка по источникам */}
-      <div style={{ paddingTop: 12, borderTop: "1px solid var(--line)" }}>
-        <div style={{ fontSize: 10.5, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 600, marginBottom: 10 }}>
-          Откуда поступают · {totalSources} шт.
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <SourceRow
-            label="In-house"
-            count={breakdown.inhouse?.count || 0}
-            total={totalSources}
-            note={breakdown.inhouse?.note}
-            color="#34d399"
-          />
-          <SourceRow
-            label="Freelance"
-            count={breakdown.freelance?.count || 0}
-            total={totalSources}
-            note={breakdown.freelance?.note}
-            color="#818cf8"
-          />
-          <SourceRow
-            label="Outsource"
-            count={breakdown.outsource?.count || 0}
-            total={totalSources}
-            note={breakdown.outsource?.note}
-            color="#f59e0b"
-            vendors={breakdown.outsource?.vendors}
-          />
-        </div>
-      </div>
-
-      {/* Delivery calendar */}
-      <CalendarStrip calendar={block.calendar} accent={accent} />
+      {/* Источники + календарь */}
+      <SourceCalendar calendar={block.calendar} accent={accent} period={period} />
     </div>
   );
 }
@@ -822,10 +969,10 @@ function CreoTeam({ team }) {
   if (!team) return null;
   return (
     <Card padding={16} style={{ marginBottom: 16 }}>
-      <SectionLabel right={<span style={{ fontSize: 11, color: "var(--fg-3)" }}>состав отдела</span>}>
-        Команда креопродакшена
+      <SectionLabel right={<span style={{ fontSize: 11, color: "var(--fg-3)" }}>team composition</span>}>
+        Creative Production Team
       </SectionLabel>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 10 }}>
         {team.groups.map(g => {
           const typeMeta = {
             inhouse:   { label: "In-house",  color: "#34d399", bg: "rgba(52,211,153,0.10)",  border: "rgba(52,211,153,0.25)" },
@@ -853,7 +1000,7 @@ function CreoTeam({ team }) {
                 <div style={{ fontSize: 28, fontWeight: 700, color: "var(--fg-0)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>
                   {g.count}
                 </div>
-                <div style={{ fontSize: 11, color: "var(--fg-2)" }}>чел.</div>
+                <div style={{ fontSize: 11, color: "var(--fg-2)" }}>{g.type === "outsource" ? "studios" : "ppl."}</div>
               </div>
               {g.note && (
                 <div style={{ fontSize: 11.5, color: "var(--fg-2)", marginBottom: 10, textWrap: "pretty", lineHeight: 1.4 }}>

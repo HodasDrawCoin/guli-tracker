@@ -15,3 +15,6 @@ Thumbs.db
 # Node
 node_modules/
 *.log
+
+# Google Service Account keys — никогда не пушить
+*.json

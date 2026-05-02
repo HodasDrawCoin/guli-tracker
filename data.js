@@ -270,38 +270,55 @@ window.__GULI_DATA__ = {
         groups: [
           {
             id: "motion",
-            label: "Моушн-дизайнеры",
+            label: "3D Motion Designers",
             count: 2,
             type: "inhouse",
-            note: "+ AI pipeline (intro / outro)",
+            note: "2 inhouse · 2 in search (+ Cinematic Artist, Freelance Motion x3)",
             members: [
-              { name: "Моушн #1", role: "Motion designer", status: "active" },
-              { name: "Моушн #2", role: "Motion designer", status: "active" }
+              { name: "Maxim Dolgov",   role: "3D Motion Designer · Lead", status: "active" },
+              { name: "Veronika Luzan", role: "3D Motion Designer",        status: "active" }
             ]
           },
           {
             id: "creo_prod",
-            label: "Креопрод (СМО)",
+            label: "Creo Prod (CMO)",
             count: 0,
             type: "hiring",
-            note: "Ищем человека · сейчас закрывает Богдан",
+            note: "In search · Bogdan covers for now",
             members: [
-              { name: "Богдан", role: "СМО · временно закрывает роль", status: "interim" },
-              { name: "—",      role: "Creative Producer",             status: "open" }
+              { name: "Bogdan", role: "CMO · covering the role", status: "interim" },
+              { name: "—",      role: "Creative Producer",       status: "open" }
             ]
           },
           {
             id: "creators",
-            label: "Креаторы",
-            count: 5,
+            label: "Creators",
+            count: 4,
             type: "freelance",
-            note: "5 человек на фрилансе",
+            note: "4 freelancers",
             members: [
-              { name: "Креатор #1", role: "Creator · freelance", status: "active" },
-              { name: "Креатор #2", role: "Creator · freelance", status: "active" },
-              { name: "Креатор #3", role: "Creator · freelance", status: "active" },
-              { name: "Креатор #4", role: "Creator · freelance", status: "active" },
-              { name: "Креатор #5", role: "Creator · freelance", status: "active" }
+              // %%CREATORS_SYNC_START%%
+              { name: "Vlad",   role: "Creator · freelance", status: "active" },
+              { name: "Sergey", role: "Creator · freelance", status: "active" },
+              { name: "Igor",   role: "Creator · freelance", status: "active" },
+              { name: "Kirill", role: "Creator · freelance", status: "active" }
+              // %%CREATORS_SYNC_END%%
+            ]
+          },
+          {
+            id: "outsource",
+            label: "Outsource",
+            count: 5,
+            type: "outsource",
+            note: "Studios & agencies",
+            members: [
+              // %%OUTSOURCE_SYNC_START%%
+              { name: "CAS",        role: "Outsource studio", status: "active" },
+              { name: "Mambo",      role: "Outsource studio", status: "active" },
+              { name: "Alchemia",   role: "Outsource studio", status: "active" },
+              { name: "RAD",        role: "Outsource studio", status: "active" },
+              { name: "GG My.Games",role: "Outsource studio", status: "active" }
+              // %%OUTSOURCE_SYNC_END%%
             ]
           }
         ]
@@ -309,25 +326,32 @@ window.__GULI_DATA__ = {
       levers: [
         {
           id: "inhouse",
-          title: "Внутренняя команда",
+          title: "Команда и найм",
           status: "in_progress",
           progress: 60,
-          updatedAt: "2026-04-29",
-          summary: "2 in-house специалиста, активный продакшн. Используем AI для intro/outro в креативах.",
-          ownersInternal: ["Creative Lead", "Motion x2"],
+          updatedAt: "2026-05-01",
+          summary: "In-house: Maxim Dolgov (Motion Lead) + Veronika Luzan. В поиске: 3D Motion Designer x2, Freelance Motion Designer x3, Creative Producer x1.",
+          ownersInternal: ["Maxim Dolgov (Motion Lead)", "Veronika Luzan"],
           counterparties: [],
+          stepsLabel: "Открытые позиции",
+          progressDots: { filled: 2, total: 8, label: "Команда" },
           nextSteps: [
-            "Найм Creative Producer (в поиске)",
-            "Расширить AI-pipeline для intro/outro",
-            "Систематизировать брифы под фрилансеров"
+            "Найм Creative Producer — 1 позиция в поиске",
+            "Найм 3D Motion Designer — 2 открытые позиции",
+            "Найм Freelance Motion Designer — 3 позиции",
+            "Расширить AI-pipeline для intro/outro"
           ],
           risks: [
-            "Без Creative Producer узкое горло — лид перегружен"
+            "Без Creative Producer узкое горло — лид перегружен",
+            "Мало креаторов — не хватает рук на объём",
+            "Мало моушенов — 2 in-house не закрывают потребность",
+            "Мало фрилансеров — нестабильный резерв"
           ],
           metrics: {
             "In-house": "2 чел.",
-            "AI usage": "Intro / Outro",
-            "Фрилансеры": "Активно"
+            "В поиске · Motion": "5 позиций",
+            "В поиске · Creo Prod": "1 позиция",
+            "AI usage": "Intro / Outro"
           },
           links: []
         },
