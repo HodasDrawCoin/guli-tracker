@@ -394,16 +394,22 @@ function TabPage({ tab }) {
       )}
       {tab.id === "creo" && (
         <React.Fragment>
+          <CreoHero production={tab.production} kpis={DATA.kpis} />
           {tab.production && <CreoProduction data={tab.production} />}
           {tab.team && <CreoTeam team={tab.team} />}
         </React.Fragment>
       )}
+      {tab.id === "team" && (
+        <HiringTab tab={tab} />
+      )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {tab.levers.map((lev, i) => (
-          <LeverCard key={lev.id} lever={lev} defaultOpen={i === 0 && !tab.placeholder} />
-        ))}
-      </div>
+      {tab.id !== "team" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {(tab.levers || []).map((lev, i) => (
+            <LeverCard key={lev.id} lever={lev} defaultOpen={i === 0 && !tab.placeholder} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

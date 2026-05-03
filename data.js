@@ -462,18 +462,268 @@ window.__GULI_DATA__ = {
       id: "team",
       title: "Команда",
       subtitle: "Hiring и состав",
-      placeholder: true,
-      levers: [
+      // %%HIRING_SYNC_START%%
+      hiringData: {
+        updatedAt: "2026-05-03",
+        summary: {
+          openPositions: 0,
+          offersAccepted: "3/18",
+          avgTTF: 96,
+          avgDaysInProgress: 90
+        },
+        vacancies: [
+
+        ],
+        funnel: [
+        { stage: "Новые", avgDays: 35 },
+        { stage: "Первый контакт", avgDays: 28 },
+        { stage: "Заинтересован", avgDays: 12 },
+        { stage: "Оценка менеджером", avgDays: 21 },
+        { stage: "Интервью с HR", avgDays: 11 },
+        { stage: "ТЗ", avgDays: 12 },
+        { stage: "Интервью с менеджером", avgDays: 20 },
+        { stage: "Финальное интервью", avgDays: 13 },
+        { stage: "Выставлен оффер", avgDays: 1 }
+        ],
+        planNaim: [
         {
-          id: "team_overview",
-          title: "Найм и состав",
-          status: "planned",
-          progress: 0,
-          summary: "Слот под численность, открытые позиции, ключевые роли в поиске.",
-          nextSteps: ["Описать org-chart", "Указать приоритетные вакансии"],
-          metrics: {}
+          position: "Project Manager",
+          count: 1,
+          closed: true,
+          offers: ["Victoria Kazantseva (выход 08/12/2025)"],
+          comment: "",
+          priority: "5",
+          division: ""
+        },
+        {
+          position: "QA Engineer",
+          count: 1,
+          closed: true,
+          offers: ["Anton Zhuk", "(выход 01/12/2025)"],
+          comment: "",
+          priority: "5",
+          division: ""
+        },
+        {
+          position: "Tech artist (Unity)",
+          count: 1,
+          closed: true,
+          offers: ["Voronkova Svetlana", "(выход 26/01/2026)"],
+          comment: "",
+          priority: "3",
+          division: ""
+        },
+        {
+          position: "2D Artist (маркетинг) +",
+          count: 1,
+          closed: true,
+          offers: ["Alexand Dolgov", "(выход 26/01/2026)"],
+          comment: "",
+          priority: "4",
+          division: ""
+        },
+        {
+          position: "QA Engineer",
+          count: 1,
+          closed: true,
+          offers: ["Max Abramchuk", "(выход 09/03/2026)"],
+          comment: "",
+          priority: "2",
+          division: ""
+        },
+        {
+          position: "2D Artist",
+          count: 1,
+          closed: true,
+          offers: ["Haidar Mikhail", "(выход 16/03/2026)"],
+          comment: "",
+          priority: "4",
+          division: ""
+        },
+        {
+          position: "Tech LD",
+          count: 1,
+          closed: true,
+          offers: ["Vasil Chaichyts", "(выход 30/03/2026)"],
+          comment: "",
+          priority: "4",
+          division: ""
+        },
+        {
+          position: "2D Marketing Artist",
+          count: 1,
+          closed: true,
+          offers: ["Alina Grib", "(выход 20/04/2026)"],
+          comment: "",
+          priority: "4",
+          division: ""
+        },
+        {
+          position: "Unity Developer",
+          count: 1,
+          closed: true,
+          offers: ["Ilia Gapomov", "(выход 13/04/2026)"],
+          comment: "",
+          priority: "4",
+          division: ""
+        },
+        {
+          position: "Product Owner",
+          count: 1,
+          closed: true,
+          offers: ["Дмитрий Быков", "(выход 22/04/2026)"],
+          comment: "",
+          priority: "5",
+          division: ""
+        },
+        {
+          position: "Project Manager",
+          count: 1,
+          closed: false,
+          offers: [],
+          comment: "",
+          priority: "5",
+          division: ""
+        },
+        {
+          position: "Creative Producer",
+          count: 1,
+          closed: false,
+          offers: [],
+          comment: "",
+          priority: "5",
+          division: ""
+        },
+        {
+          position: "QA Engineer",
+          count: 1,
+          closed: false,
+          offers: [],
+          comment: "",
+          priority: "5",
+          division: ""
+        },
+        {
+          position: "3D Artist",
+          count: 3,
+          closed: false,
+          offers: ["Yuliya Medvedeva", "(выход 18/12/2025)"],
+          comment: "",
+          priority: "5",
+          division: ""
+        },
+        {
+          position: "3D Motion Designer +",
+          count: 4,
+          closed: false,
+          offers: ["Maxim Dolgov", "(выход 09/02/2026)", "Veronica Luzan", "(выход 13/04/2026)"],
+          comment: "",
+          priority: "4",
+          division: ""
+        },
+        {
+          position: "Cinematic Artist",
+          count: 1,
+          closed: false,
+          offers: [],
+          comment: "",
+          priority: "4",
+          division: ""
+        },
+        {
+          position: "3D Artist (Unreal Engine)",
+          count: 1,
+          closed: false,
+          offers: [],
+          comment: "",
+          priority: "2",
+          division: ""
+        },
+        {
+          position: "Freelance Motion Designer",
+          count: 3,
+          closed: false,
+          offers: [],
+          comment: "",
+          priority: "4",
+          division: ""
+        },
+        {
+          position: "Technical Support",
+          count: 1,
+          closed: false,
+          offers: [],
+          comment: "",
+          priority: "3",
+          division: ""
+        },
+        {
+          position: "Level Designer",
+          count: 1,
+          closed: false,
+          offers: ["Siarhei Skliarou", "(выход 06/01/2026)", "Evgenia Krot", "(выход 06/01/2026)"],
+          comment: "",
+          priority: "1",
+          division: ""
+        },
+        {
+          position: "Lead QA",
+          count: 1,
+          closed: false,
+          offers: [],
+          comment: "",
+          priority: "1",
+          division: ""
+        },
+        {
+          position: "3D Motion Designer (tech lead) +",
+          count: 1,
+          closed: false,
+          offers: [],
+          comment: "",
+          priority: "0",
+          division: ""
+        },
+        {
+          position: "Project Manager (в креативную команду)",
+          count: 1,
+          closed: false,
+          offers: [],
+          comment: "",
+          priority: "0",
+          division: ""
+        },
+        {
+          position: "Illustrator",
+          count: 1,
+          closed: false,
+          offers: ["на стопе"],
+          comment: "",
+          priority: "0",
+          division: ""
+        },
+        {
+          position: "AI Artist",
+          count: 1,
+          closed: false,
+          offers: [],
+          comment: "",
+          priority: "0",
+          division: ""
+        },
+        {
+          position: "AI Motion",
+          count: 1,
+          closed: false,
+          offers: [],
+          comment: "",
+          priority: "0",
+          division: ""
         }
-      ]
+        ]
+      },
+      // %%HIRING_SYNC_END%%
+      levers: []
     },
     {
       id: "vendors",

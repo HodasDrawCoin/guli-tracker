@@ -752,14 +752,27 @@ function CalendarStrip({ calendar, accent }) {
 function CreoProduction({ data }) {
   if (!data) return null;
   const blocks = [
-    { key: "creatives", accent: "#f59e0b", data: data.creatives },
-    { key: "playables", accent: "#34d399", data: data.playables }
+    { key: "creatives", accent: "#00c896", data: data.creatives },
+    { key: "playables", accent: "#f97316", data: data.playables }
   ];
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16, alignItems: "start" }}>
-      {blocks.map(b => (
-        <CreoVolumeCard key={b.key} accent={b.accent} block={b.data} period={data.period} />
-      ))}
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+        <div style={{
+          width: 3, height: 14, borderRadius: 2,
+          background: "linear-gradient(to bottom, #00c896, #00c89640)",
+          boxShadow: "0 0 10px #00c89688",
+        }} />
+        <span style={{ fontSize: 9, color: "#00c896", textTransform: "uppercase", letterSpacing: 1.5, fontWeight: 700 }}>
+          Volume · {data.period || "current period"}
+        </span>
+        <div style={{ flex: 1, height: 1, background: "linear-gradient(to right, rgba(0,200,150,0.3), transparent)" }} />
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, alignItems: "start" }}>
+        {blocks.map(b => (
+          <CreoVolumeCard key={b.key} accent={b.accent} block={b.data} period={data.period} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -769,12 +782,13 @@ function CreoVolumeCard({ block, accent, period }) {
   const { label, planNow } = block;
 
   const patchKey = label === "Креативы" ? "creo.planTarget" : "play.planTarget";
-
   const isLocal = location.hostname === "localhost" || location.hostname === "127.0.0.1";
 
   const [planTarget, setPlanTarget] = useState(block.planTarget);
   const [saved, setSaved] = useState(false);
   const [saveErr, setSaveErr] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setMounted(true), 80); return () => clearTimeout(t); }, []);
 
   // Регистрируем текущее значение глобально — Publish-кнопка читает его перед git push
   useEffect(() => {
@@ -824,96 +838,164 @@ function CreoVolumeCard({ block, accent, period }) {
   const curShort   = SHORT_MONTHS[curM];
   const nextShort  = SHORT_MONTHS[nextM];
 
+  // Circular gauge
+  const GR = 48, GC = 2 * Math.PI * GR;
+  const pctTarget = Math.min(100, Math.round((sdanoCur / (planTarget || 1)) * 100));
+  const gaugeLen  = mounted ? (pctTarget / 100) * GC : 0;
+
+  // Mini bars
+  const bars = [
+    { label: prevShort, value: sdanoPrev, type: "done" },
+    { label: curShort,  value: sdanoCur > 0 ? sdanoCur : workCur, type: sdanoCur > 0 ? "partial" : "planned" },
+    { label: nextShort, value: workNext,  type: "planned" },
+  ];
+  const maxBar = Math.max(...bars.map(b => b.value), 1);
+
   return (
     <div style={{
-      background: `linear-gradient(135deg, ${accent}14 0%, transparent 45%), var(--bg-1)`,
-      border: "1px solid var(--line)",
-      borderTop: `3px solid ${accent}`,
-      borderRadius: 10, padding: 16
+      background: `linear-gradient(160deg, ${accent}0e 0%, #0d1a1500 55%), #0d1a15`,
+      border: `1px solid ${accent}28`,
+      borderTop: `2px solid ${accent}`,
+      borderRadius: 14, padding: "18px 18px 14px",
+      position: "relative", overflow: "hidden",
     }}>
-      {/* Заголовок: название слева, цель справа */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <div style={{ fontSize: 11, color: accent, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700 }}>
+      {/* Corner glow */}
+      <div style={{
+        position: "absolute", top: -30, right: -30, width: 130, height: 130,
+        borderRadius: "50%", background: `${accent}10`, filter: "blur(36px)", pointerEvents: "none",
+      }} />
+
+      {/* Header row: label + target control */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, position: "relative" }}>
+        <div style={{ fontSize: 9, color: accent, textTransform: "uppercase", letterSpacing: 1.4, fontWeight: 700 }}>
           {label === "Креативы" ? "Creatives" : label}
         </div>
-        {/* Цель — компактно справа */}
         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          <span style={{ fontSize: 9, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: 0.4, fontWeight: 600 }}>Target</span>
+          <span style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: 0.5 }}>Target</span>
           {isLocal && (
             <button onClick={() => changeTarget(-1)} style={{
               width: 20, height: 20, borderRadius: 4, border: `1px solid ${accent}44`,
-              background: `${accent}14`, color: accent, fontSize: 14, fontWeight: 700,
+              background: `${accent}14`, color: accent, fontSize: 13, fontWeight: 700,
               cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-              lineHeight: 1, flexShrink: 0
             }}>−</button>
           )}
-          <span style={{ fontSize: 16, fontWeight: 700, color: accent, fontVariantNumeric: "tabular-nums", minWidth: 24, textAlign: "center" }}>
+          <span style={{ fontSize: 17, fontWeight: 700, color: accent, fontVariantNumeric: "tabular-nums", minWidth: 24, textAlign: "center" }}>
             {planTarget}
           </span>
           {isLocal && (
             <button onClick={() => changeTarget(1)} style={{
               width: 20, height: 20, borderRadius: 4, border: `1px solid ${accent}44`,
-              background: `${accent}14`, color: accent, fontSize: 14, fontWeight: 700,
+              background: `${accent}14`, color: accent, fontSize: 13, fontWeight: 700,
               cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-              lineHeight: 1, flexShrink: 0
             }}>+</button>
           )}
           {targetDelta !== 0 && (
-            <span style={{
-              fontSize: 10, padding: "1px 5px", borderRadius: 4,
-              background: `${accent}22`, color: accent, fontWeight: 700,
-              fontVariantNumeric: "tabular-nums"
-            }}>
+            <span style={{ fontSize: 10, padding: "1px 5px", borderRadius: 4, background: `${accent}1a`, color: accent, fontWeight: 700 }}>
               {targetDelta > 0 ? "+" : ""}{targetDelta}
             </span>
           )}
-          {saved && <span style={{ fontSize: 9, color: "#34d399" }}>✓</span>}
+          {saved && <span style={{ fontSize: 9, color: "#00c896" }}>✓</span>}
           {saveErr && <span style={{ fontSize: 9, color: "#f87171" }}>✗</span>}
         </div>
       </div>
 
-      {/* Текущий статус — два месяца каждый блок */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
-
-        {/* В работе */}
-        <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.07)", borderLeft: "3px solid rgba(245,158,11,0.5)" }}>
-          <div style={{ fontSize: 12, color: "#fcd34d", textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, marginBottom: 10 }}>
-            In progress
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 10, color: "rgba(252,211,77,0.55)", fontWeight: 500, marginBottom: 3 }}>{curShort}</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "var(--fg-0)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{workCur}</div>
+      {/* Circular gauge + stats row */}
+      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
+        {/* Big SVG gauge */}
+        <div style={{ position: "relative", width: 116, height: 116, flexShrink: 0 }}>
+          <svg width="116" height="116" viewBox="0 0 116 116" style={{ transform: "rotate(-90deg)" }}>
+            <circle cx="58" cy="58" r={GR} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="10" />
+            <circle
+              cx="58" cy="58" r={GR} fill="none"
+              stroke={accent} strokeWidth="10"
+              strokeLinecap="round"
+              strokeDasharray={`${gaugeLen} ${GC}`}
+              style={{ transition: "stroke-dasharray 1.4s cubic-bezier(.2,.8,.2,1)" }}
+            />
+          </svg>
+          <div style={{
+            position: "absolute", inset: 0,
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          }}>
+            <div style={{
+              fontSize: 30, fontWeight: 900, color: "#fff",
+              fontVariantNumeric: "tabular-nums", lineHeight: 1,
+              textShadow: `0 0 24px ${accent}99`,
+            }}>
+              {pctTarget}<span style={{ fontSize: 15, fontWeight: 700, color: accent }}>%</span>
             </div>
-            <div style={{ width: 1, height: 34, background: "rgba(245,158,11,0.15)", margin: "0 12px" }} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 10, color: "rgba(252,211,77,0.35)", fontWeight: 500, marginBottom: 3 }}>{nextShort}</div>
-              <div style={{ fontSize: 20, fontWeight: 600, color: "var(--fg-0)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{workNext}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Сдано */}
-        <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(52,211,153,0.07)", borderLeft: "3px solid rgba(52,211,153,0.4)" }}>
-          <div style={{ fontSize: 12, color: "#86efac", textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, marginBottom: 10 }}>
-            Delivered
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 10, color: "rgba(134,239,172,0.35)", fontWeight: 500, marginBottom: 3 }}>{prevShort}</div>
-              <div style={{ fontSize: 20, fontWeight: 600, color: "var(--fg-0)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{sdanoPrev}</div>
-            </div>
-            <div style={{ width: 1, height: 34, background: "rgba(52,211,153,0.15)", margin: "0 12px" }} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 10, color: "rgba(134,239,172,0.55)", fontWeight: 500, marginBottom: 3 }}>{curShort}</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "var(--fg-0)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{sdanoCur}</div>
+            <div style={{ fontSize: 8, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: 0.8, marginTop: 4 }}>
+              of target
             </div>
           </div>
         </div>
 
+        {/* Right stats */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 8, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 3 }}>
+              Delivered {curShort}
+            </div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+              <span style={{ fontSize: 36, fontWeight: 900, color: accent, fontVariantNumeric: "tabular-nums", lineHeight: 1, textShadow: `0 0 18px ${accent}66` }}>
+                {sdanoCur}
+              </span>
+              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.2)" }}>/ {planTarget}</span>
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 8, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 3 }}>
+              In progress {curShort}
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: "var(--fg-0)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>
+              {workCur}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Источники + календарь */}
+      {/* Mini 3-bar trend chart */}
+      <div style={{
+        background: "rgba(255,255,255,0.02)", borderRadius: 8, padding: "10px 12px",
+        marginBottom: 12, border: `1px solid ${accent}10`,
+      }}>
+        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 8 }}>Trend</div>
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 5, height: 46 }}>
+          {bars.map((b, i) => {
+            const h = Math.max(3, Math.round((b.value / maxBar) * 40));
+            const isCur = i === 1;
+            const isDone = b.type === "done";
+            return (
+              <div key={b.label} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: isCur ? "#fff" : "rgba(255,255,255,0.3)", fontVariantNumeric: "tabular-nums" }}>{b.value}</div>
+                <div style={{
+                  width: "100%", height: mounted ? h : 0, transition: "height 1s " + (0.1 + i * 0.12) + "s cubic-bezier(.2,.8,.2,1)",
+                  background: isDone ? accent : (b.type === "partial" ? `${accent}66` : `${accent}22`),
+                  borderRadius: "3px 3px 0 0",
+                  boxShadow: isDone ? `0 0 10px ${accent}44` : "none",
+                  border: isCur ? `1px solid ${accent}44` : "none",
+                }} />
+                <div style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", textTransform: "uppercase" }}>{b.label}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Prev month delivered strip */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "6px 10px", borderRadius: 7, marginBottom: 12,
+        background: "rgba(255,255,255,0.02)", border: `1px solid ${accent}10`,
+      }}>
+        <span style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: 0.5 }}>
+          {prevShort} delivered
+        </span>
+        <span style={{ fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.55)", fontVariantNumeric: "tabular-nums" }}>{sdanoPrev}</span>
+        <span style={{ fontSize: 9, color: "rgba(255,255,255,0.25)" }}>→ {nextShort} planned: <b style={{ color: accent }}>{workNext}</b></span>
+      </div>
+
+      {/* Source calendar */}
       <SourceCalendar calendar={block.calendar} accent={accent} period={period} />
     </div>
   );
@@ -1113,10 +1195,517 @@ function HealthDonut({ counts }) {
   );
 }
 
+// =============================================================================
+// CreoHero — full-bleed арт + прогресс + donut источников
+// =============================================================================
+function CreoHero({ production, kpis }) {
+  if (!production) return null;
+  var creo = production.creatives || {};
+  var play = production.playables || {};
+  var creoKpi = (kpis || []).find(function(k){ return k.id === "creo"; }) || {};
+  var playKpi = (kpis || []).find(function(k){ return k.id === "playables"; }) || {};
+
+  // Источники для donut
+  var bd = creo.breakdown || {};
+  var ih = (bd.inhouse  && bd.inhouse.count)  || 0;
+  var fr = (bd.freelance && bd.freelance.count) || 0;
+  var os = (bd.outsource && bd.outsource.count) || 0;
+  var srcTotal = (ih + fr + os) || 1;
+  var R = 34; var C = 2 * Math.PI * R;
+  var donutSegs = [
+    { v: ih, color: "#00c896", label: "In-house" },
+    { v: fr, color: "#818cf8", label: "Freelance" },
+    { v: os, color: "#f97316", label: "Outsource" },
+  ];
+  var donutOffset = 0;
+
+  // Прогресс к цели
+  var delivered  = creo.doneThisMonth != null ? creo.doneThisMonth : 0;
+  var inProgress = creo.inProgress    != null ? creo.inProgress    : 0;
+  var target     = creo.planTarget    || 1;
+  var pct        = Math.min(100, Math.round((delivered / target) * 100));
+
+  var kpis4 = [
+    { label: "Creo / month", value: creoKpi.value || "~29", color: "#00c896" },
+    { label: "In progress",  value: inProgress,              color: "#f97316" },
+    { label: "Playables",    value: playKpi.value || "—",   color: "#a78bfa" },
+    { label: "Period",       value: production.period || "—", color: "rgba(255,255,255,0.5)" },
+  ];
+
+  // Sparkline from calendar.done (last 10 months)
+  var cal = creo.calendar || {};
+  var nowH = new Date();
+  var sparkData = [];
+  for (var si = 0; si < 10; si++) {
+    var sm = nowH.getMonth() - (9 - si);
+    var sy = nowH.getFullYear();
+    if (sm < 0) { sm += 12; sy -= 1; }
+    var prefix = sy + "-" + String(sm + 1).padStart(2, "0");
+    var tot = (cal.done || []).filter(function(d) { return d.date.startsWith(prefix); })
+      .reduce(function(s, d) { return s + (d.inhouse||0) + (d.freelance||0) + (d.outsource||0); }, 0);
+    sparkData.push(tot);
+  }
+  var sparkMax = Math.max.apply(null, sparkData.concat([target, 1]));
+  var SW = 700, SH = 88;
+  var sparkPts = sparkData.map(function(v, i) {
+    return [20 + (i / 9) * (SW - 40), SH - 6 - (v / sparkMax) * (SH - 16)];
+  });
+  var sparkPath = sparkPts.map(function(p, i) {
+    if (i === 0) return "M " + p[0].toFixed(1) + " " + p[1].toFixed(1);
+    var prev = sparkPts[i - 1];
+    var cpx = ((prev[0] + p[0]) / 2).toFixed(1);
+    return "C " + cpx + " " + prev[1].toFixed(1) + " " + cpx + " " + p[1].toFixed(1) + " " + p[0].toFixed(1) + " " + p[1].toFixed(1);
+  }).join(" ");
+  var lastPt = sparkPts[sparkPts.length - 1] || [SW - 20, SH / 2];
+  var areaPath = sparkPath + " L " + lastPt[0].toFixed(1) + " " + SH + " L 20 " + SH + " Z";
+
+  return (
+    <div style={{
+      position: "relative",
+      margin: "-24px -32px 24px",
+      height: 380,
+      background: "#060f0a",
+      overflow: "hidden",
+    }}>
+
+      {/* ── CSS анимации ──────────────────────────────────── */}
+      <style>{`
+        @keyframes creoFadeUp {
+          from { opacity:0; transform:translateY(14px); }
+          to   { opacity:1; transform:translateY(0); }
+        }
+        @keyframes creoBarExpand { from { width:0; } }
+        @keyframes creoArcDraw   { from { stroke-dasharray:0 10000; } }
+        @keyframes creoLineDraw  {
+          from { stroke-dashoffset:2400; }
+          to   { stroke-dashoffset:0; }
+        }
+        @keyframes creoGlow {
+          0%,100% { text-shadow:0 0 22px rgba(0,200,150,0.35); }
+          50%      { text-shadow:0 0 52px rgba(0,200,150,0.8); }
+        }
+        @keyframes creoPulse {
+          0%,100% { opacity:1; transform:scale(1); }
+          50%      { opacity:0.55; transform:scale(0.88); }
+        }
+        @keyframes creoChipIn {
+          from { opacity:0; transform:translateY(10px) scale(0.96); }
+          to   { opacity:1; transform:translateY(0) scale(1); }
+        }
+        .cf1 { animation:creoFadeUp 0.55s 0.05s ease both; }
+        .cf2 { animation:creoFadeUp 0.55s 0.16s ease both; }
+        .cf3 { animation:creoFadeUp 0.55s 0.27s ease both; }
+        .cf4 { animation:creoFadeUp 0.55s 0.38s ease both; }
+        .cln { stroke-dasharray:2400; animation:creoLineDraw 2.4s 0.2s cubic-bezier(.2,.8,.2,1) both; }
+        .cc0 { animation:creoChipIn 0.5s 0.55s ease both; }
+        .cc1 { animation:creoChipIn 0.5s 0.68s ease both; }
+        .cc2 { animation:creoChipIn 0.5s 0.81s ease both; }
+        .cc3 { animation:creoChipIn 0.5s 0.94s ease both; }
+        .cgn { animation:creoGlow   3s  1.0s ease infinite; }
+        .cpls{ animation:creoPulse  2.2s 0.8s ease infinite; }
+      `}</style>
+
+      {/* Арт */}
+      <div style={{
+        position: "absolute", inset: 0,
+        backgroundImage: "url(/assets/legendale-promo.png?v=3)",
+        backgroundSize: "cover",
+        backgroundPosition: "center 15%",
+        opacity: 0.65, filter: "saturate(0.9) brightness(0.85)",
+      }} />
+
+      {/* Тёмно-зелёный colour cast */}
+      <div style={{ position:"absolute", inset:0, background:"rgba(0,18,10,0.52)" }} />
+
+      {/* SVG-линия поверх арта */}
+      <div style={{ position:"absolute", inset:0, zIndex:1, pointerEvents:"none" }}>
+        <svg viewBox={"0 0 " + SW + " " + (SH + 20)} preserveAspectRatio="none"
+          style={{ position:"absolute", bottom:100, left:0, width:"100%", height:110 }}>
+          <defs>
+            <linearGradient id="csparkA" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stopColor="#f97316" stopOpacity="0.18" />
+              <stop offset="100%" stopColor="#f97316" stopOpacity="0"    />
+            </linearGradient>
+          </defs>
+          <path d={areaPath} fill="url(#csparkA)" />
+          <path d={sparkPath} fill="none" stroke="#f97316" strokeWidth="2.8"
+            strokeLinejoin="round" strokeLinecap="round" className="cln" />
+          <circle cx={lastPt[0]} cy={lastPt[1]} r="5"  fill="#f97316" />
+          <circle cx={lastPt[0]} cy={lastPt[1]} r="10" fill="none" stroke="#f97316" strokeWidth="1.5" opacity="0.4" />
+        </svg>
+      </div>
+
+      {/* Градиенты */}
+      <div style={{ position:"absolute", inset:0, zIndex:2,
+        background:"linear-gradient(108deg, rgba(6,15,10,0.97) 0%, rgba(6,15,10,0.80) 36%, rgba(6,15,10,0.18) 68%, transparent 100%)" }} />
+      <div style={{ position:"absolute", bottom:0, left:0, right:0, height:150, zIndex:2,
+        background:"linear-gradient(to top, rgba(6,15,10,1) 0%, rgba(6,15,10,0.55) 45%, transparent 100%)" }} />
+      <div style={{ position:"absolute", top:0, left:0, right:0, height:70, zIndex:2,
+        background:"linear-gradient(to bottom, rgba(6,15,10,0.7) 0%, transparent 100%)" }} />
+      <div style={{ position:"absolute", bottom:-60, left:-60, width:320, height:320, zIndex:2,
+        borderRadius:"50%", background:"radial-gradient(circle, rgba(0,200,150,0.10) 0%, transparent 70%)", pointerEvents:"none" }} />
+
+      {/* Контент */}
+      <div style={{
+        position:"relative", zIndex:3,
+        padding:"28px 40px 22px", height:"100%", boxSizing:"border-box",
+        display:"flex", flexDirection:"column", justifyContent:"space-between",
+      }}>
+
+        {/* Верх: заголовок + donut */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+
+          {/* Левая часть */}
+          <div>
+            <div className="cf1" style={{
+              fontSize:10, color:"rgba(0,200,150,0.65)",
+              textTransform:"uppercase", letterSpacing:2.2, fontWeight:700, marginBottom:14,
+              display:"flex", alignItems:"center", gap:10,
+            }}>
+              <span style={{ width:26, height:1.5, background:"linear-gradient(to right,#00c896,transparent)", display:"inline-block" }} />
+              Guli Games · Creative Production
+            </div>
+
+            <div className="cf2" style={{
+              fontSize:46, fontWeight:900, color:"#fff",
+              letterSpacing:-2.5, lineHeight:0.92, marginBottom:18,
+              textShadow:"0 2px 40px rgba(0,0,0,0.9)",
+            }}>
+              Legendale
+            </div>
+
+            <div className="cf3" style={{ display:"flex", alignItems:"baseline", gap:10, marginBottom:12 }}>
+              <span className="cgn" style={{
+                fontSize:44, fontWeight:900, color:"#00c896",
+                fontVariantNumeric:"tabular-nums", lineHeight:1,
+              }}>{delivered}</span>
+              <span style={{ fontSize:18, color:"rgba(255,255,255,0.18)", lineHeight:1 }}>/ {target}</span>
+              <span style={{ fontSize:10, color:"rgba(255,255,255,0.3)", letterSpacing:0.5 }}>delivered · target</span>
+            </div>
+
+            <div className="cf4" style={{ width:280 }}>
+              <div style={{ height:5, background:"rgba(255,255,255,0.07)", borderRadius:3, overflow:"hidden" }}>
+                <div style={{
+                  width:pct+"%", height:"100%",
+                  background:"linear-gradient(to right,#00c896,#6ee7b7)",
+                  borderRadius:3, boxShadow:"0 0 14px rgba(0,200,150,0.55)",
+                  animation:"creoBarExpand 1.5s 0.3s cubic-bezier(.2,.8,.2,1) both",
+                }} />
+              </div>
+              <div style={{ display:"flex", justifyContent:"space-between", marginTop:5 }}>
+                <span style={{ fontSize:10, color:"rgba(0,200,150,0.65)", fontWeight:600 }}>{pct}% к цели</span>
+                <span style={{ fontSize:10, color:"rgba(255,255,255,0.2)", fontVariantNumeric:"tabular-nums" }}>{inProgress} in progress</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Donut панель */}
+          <div style={{
+            display:"flex", alignItems:"center", gap:20,
+            background:"rgba(6,15,10,0.78)", backdropFilter:"blur(18px)",
+            border:"1px solid rgba(0,200,150,0.18)",
+            borderRadius:20, padding:"20px 24px",
+            boxShadow:"0 8px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(0,200,150,0.08)",
+          }}>
+            <div style={{ position:"relative", width:100, height:100, flexShrink:0 }}>
+              <svg width="100" height="100" viewBox="0 0 100 100" style={{ transform:"rotate(-90deg)" }}>
+                <circle cx="50" cy="50" r={R} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" />
+                {donutSegs.map(function(s, i) {
+                  var len = (s.v / srcTotal) * C;
+                  var el = React.createElement("circle", {
+                    key: i, cx:"50", cy:"50", r:R, fill:"none",
+                    stroke:s.color, strokeWidth:"12",
+                    strokeDasharray: len + " " + (C - len),
+                    strokeDashoffset: -donutOffset,
+                    style: { animation:"creoArcDraw 1.6s "+(0.3+i*0.15)+"s cubic-bezier(.2,.8,.2,1) both" },
+                  });
+                  donutOffset += len;
+                  return el;
+                })}
+              </svg>
+              <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
+                <div style={{ fontSize:22, fontWeight:800, color:"#fff", lineHeight:1 }}>{srcTotal}</div>
+                <div style={{ fontSize:8, color:"rgba(255,255,255,0.28)", textTransform:"uppercase", letterSpacing:0.8, marginTop:2 }}>creos</div>
+              </div>
+            </div>
+            <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+              <div style={{ fontSize:9, color:"rgba(255,255,255,0.22)", textTransform:"uppercase", letterSpacing:1, marginBottom:2 }}>Sources</div>
+              {donutSegs.map(function(s) {
+                var ps = Math.round((s.v / srcTotal) * 100);
+                return (
+                  <div key={s.label} style={{ display:"flex", alignItems:"center", gap:10 }}>
+                    <div className="cpls" style={{ width:8, height:8, borderRadius:2, background:s.color, flexShrink:0, boxShadow:"0 0 6px "+s.color+"66" }} />
+                    <span style={{ fontSize:12, color:"rgba(255,255,255,0.4)", minWidth:68 }}>{s.label}</span>
+                    <span style={{ fontSize:14, fontWeight:700, color:"#fff", fontVariantNumeric:"tabular-nums", minWidth:20, textAlign:"right" }}>{s.v}</span>
+                    <span style={{ fontSize:10, color:"rgba(255,255,255,0.2)" }}>{ps}%</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* KPI-чипы */}
+        <div style={{ display:"flex", gap:10 }}>
+          {kpis4.map(function(s, i) {
+            return (
+              <div key={s.label} className={"cc"+i} style={{
+                background:"rgba(6,15,10,0.85)",
+                border:"1px solid rgba(255,255,255,0.07)",
+                borderTop:"2px solid "+s.color+"66",
+                borderRadius:12, padding:"12px 18px", flex:1,
+                backdropFilter:"blur(14px)",
+                boxShadow:"0 4px 24px rgba(0,0,0,0.45)",
+              }}>
+                <div style={{ fontSize:8, color:"rgba(255,255,255,0.25)", textTransform:"uppercase", letterSpacing:1.1, marginBottom:8 }}>
+                  {s.label}
+                </div>
+                <div style={{
+                  fontSize:28, fontWeight:900, color:s.color,
+                  fontVariantNumeric:"tabular-nums", lineHeight:1,
+                  textShadow:"0 0 22px "+s.color+"55",
+                }}>
+                  {s.value}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// HiringTab — Hiring Control Panel
+// Источники: Google Sheets (приоритеты) + Huntflow (TTF, воронка)
+// =============================================================================
+
+function HiringTab({ tab }) {
+  const d        = tab.hiringData || {};
+  const summary  = d.summary  || {};
+  const funnel   = d.funnel   || [];
+  const planNaim = d.planNaim || [];
+  const updatedAt = d.updatedAt;
+
+  // Приоритеты: 5=критично, 4=высокий, 3=средний, 2=низкий, 1=беклог, 0=будущее
+  const PRIO = {
+    "5": { label: "Критично",  color: "#ef4444", bg: "#ef444418", dot: "#ef4444" },
+    "4": { label: "Высокий",   color: "#f97316", bg: "#f9731618", dot: "#f97316" },
+    "3": { label: "Средний",   color: "#eab308", bg: "#eab30818", dot: "#eab308" },
+    "2": { label: "Низкий",    color: "#38bdf8", bg: "#38bdf818", dot: "#38bdf8" },
+    "1": { label: "Беклог",    color: "#6b7280", bg: "#6b728018", dot: "#6b7280" },
+    "0": { label: "Будущее",   color: "#4b5563", bg: "#4b556318", dot: "#4b5563" },
+  };
+
+  // Только открытые позиции, сортируем по приоритету (5 вверху)
+  const open   = planNaim.filter(p => !p.closed).sort((a,b) => Number(b.priority||0) - Number(a.priority||0));
+  const closed = planNaim.filter(p => p.closed);
+
+  // Считаем: нужно нанять всего
+  const totalNeeded = open.reduce((s, p) => s + (p.count || 1), 0);
+  const totalHired  = closed.length;
+  const offerRate   = summary.offersAccepted || "—";
+
+  // Воронка — общее время = сумма всех стадий
+  const totalFunnelDays = funnel.reduce((s, f) => s + f.avgDays, 0);
+  const maxFunnelDays   = funnel.reduce((m, f) => Math.max(m, f.avgDays), 1);
+
+  // Группировка открытых по приоритету
+  const byPrio = {};
+  for (const p of open) {
+    const k = p.priority || "0";
+    if (!byPrio[k]) byPrio[k] = [];
+    byPrio[k].push(p);
+  }
+  const prioKeys = ["5","4","3","2","1","0"].filter(k => byPrio[k]);
+
+  const CSS = `
+    @keyframes hUp  { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+    @keyframes hBar { from{width:0} to{width:var(--tw)} }
+    @keyframes hGap { from{stroke-dashoffset:var(--len)} to{stroke-dashoffset:0} }
+    .ha1{animation:hUp .4s ease both}
+    .ha2{animation:hUp .4s .07s ease both}
+    .ha3{animation:hUp .4s .14s ease both}
+    .ha4{animation:hUp .4s .21s ease both}
+    .hgb{animation:hBar .8s .2s ease both}
+  `;
+
+  const CHAR_RECRUITER = "assets/characters/222222-removebg-preview.png";
+  const CHAR_LAPTOP    = "assets/characters/1111-removebg-preview.png";
+
+  return (
+    <div style={{ padding: "20px 0 60px" }}>
+      <style>{CSS}</style>
+
+      {/* ══ TOP STRIP ══════════════════════════════════════════════════════ */}
+      <div className="ha1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10, marginBottom: 28 }}>
+        {/* Hiring Gap */}
+        <div style={{ background: "var(--surface-1)", border: "1px solid var(--border)", borderTop: "2px solid #ef4444", borderRadius: 10, padding: "16px 18px" }}>
+          <div style={{ fontSize: 10, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8, fontWeight: 600 }}>Hiring Gap</div>
+          <div style={{ fontSize: 30, fontWeight: 800, color: "#ef4444", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{totalNeeded}</div>
+          <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 4 }}>позиций в активном поиске</div>
+        </div>
+        {/* Offer rate */}
+        <div style={{ background: "var(--surface-1)", border: "1px solid var(--border)", borderTop: "2px solid #f97316", borderRadius: 10, padding: "16px 18px" }}>
+          <div style={{ fontSize: 10, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8, fontWeight: 600 }}>Офферов принято</div>
+          <div style={{ fontSize: 30, fontWeight: 800, color: "#f97316", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{offerRate}</div>
+          <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 4 }}>за всё время · закрыто {totalHired} ролей</div>
+        </div>
+        {/* Avg TTF */}
+        <div style={{ background: "var(--surface-1)", border: "1px solid var(--border)", borderTop: "2px solid #818cf8", borderRadius: 10, padding: "16px 18px" }}>
+          <div style={{ fontSize: 10, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8, fontWeight: 600 }}>Avg Time to Fill</div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+            <span style={{ fontSize: 30, fontWeight: 800, color: "#818cf8", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{summary.avgTTF ?? "—"}</span>
+            {summary.avgTTF && <span style={{ fontSize: 13, color: "var(--fg-3)" }}>дн.</span>}
+          </div>
+          <div style={{ fontSize: 11, color: summary.avgTTF > 60 ? "#f97316" : "#00c896", marginTop: 4 }}>
+            {summary.avgTTF > 60 ? "⚠ выше целевых 60 дн." : "✓ в норме"}
+          </div>
+        </div>
+        {/* Days in progress */}
+        <div style={{ background: "var(--surface-1)", border: "1px solid var(--border)", borderTop: "2px solid #00c896", borderRadius: 10, padding: "16px 18px" }}>
+          <div style={{ fontSize: 10, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8, fontWeight: 600 }}>Avg в работе</div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+            <span style={{ fontSize: 30, fontWeight: 800, color: "#00c896", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{summary.avgDaysInProgress ?? "—"}</span>
+            {summary.avgDaysInProgress && <span style={{ fontSize: 13, color: "var(--fg-3)" }}>дн.</span>}
+          </div>
+          <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 4 }}>среднее время на вакансию</div>
+        </div>
+      </div>
+
+      {/* ══ PRIORITY ROLES + ПЕРСОНАЖ ══════════════════════════════════════ */}
+      <div className="ha2" style={{ display: "grid", gridTemplateColumns: "1fr 200px", gap: 0, marginBottom: 28, alignItems: "start" }}>
+        <div>
+          <div style={{ fontSize: 11, color: "var(--fg-3)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600, marginBottom: 14 }}>
+            Активный поиск · {open.length} позиций
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {prioKeys.map(pk => {
+              const tier = PRIO[pk] || PRIO["0"];
+              const roles = byPrio[pk];
+              return (
+                <div key={pk} style={{ background: "var(--surface-1)", border: `1px solid var(--border)`, borderLeft: `3px solid ${tier.color}`, borderRadius: 10, overflow: "hidden" }}>
+                  {/* Tier header */}
+                  <div style={{ padding: "8px 14px", background: tier.bg, display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: tier.color, boxShadow: `0 0 6px ${tier.color}` }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: tier.color, textTransform: "uppercase", letterSpacing: 0.8 }}>{tier.label}</span>
+                    <span style={{ fontSize: 11, color: "var(--fg-3)", marginLeft: "auto" }}>{roles.reduce((s,r) => s+(r.count||1), 0)} позиц.</span>
+                  </div>
+                  {/* Role rows */}
+                  {roles.map((r, i) => (
+                    <div key={i} style={{
+                      display: "grid", gridTemplateColumns: "1fr auto auto",
+                      alignItems: "center", gap: 12,
+                      padding: "10px 14px",
+                      borderTop: i > 0 ? "1px solid var(--border)" : undefined,
+                    }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--fg-0)" }}>{r.position}</div>
+                        {r.comment && <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 1 }}>{r.comment}</div>}
+                      </div>
+                      {r.count > 1 && (
+                        <div style={{ fontSize: 12, color: "var(--fg-3)", whiteSpace: "nowrap" }}>×{r.count}</div>
+                      )}
+                      <div>
+                        {r.offers && r.offers.length > 0
+                          ? <span style={{ fontSize: 10, padding: "3px 9px", borderRadius: 999, background: "#f9731618", color: "#f97316", fontWeight: 700, whiteSpace: "nowrap" }}>ОФФЕР</span>
+                          : <span style={{ fontSize: 10, padding: "3px 9px", borderRadius: 999, background: "#00c89618", color: "#00c896", fontWeight: 700, whiteSpace: "nowrap" }}>В ПОИСКЕ</span>
+                        }
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Персонаж — рекрутер */}
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-end", paddingLeft: 12, marginTop: 30 }}>
+          <img src={CHAR_RECRUITER} alt="" style={{ width: 180, height: "auto", filter: "drop-shadow(0 8px 24px rgba(0,200,150,0.18))", userSelect: "none" }} />
+        </div>
+      </div>
+
+      {/* ══ PIPELINE FUNNEL + ПЕРСОНАЖ ═════════════════════════════════════ */}
+      {funnel.length > 0 && (
+        <div className="ha3" style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 0, marginBottom: 28, alignItems: "start" }}>
+          {/* Персонаж — аналитик */}
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-end", paddingRight: 12, marginTop: 30 }}>
+            <img src={CHAR_LAPTOP} alt="" style={{ width: 175, height: "auto", filter: "drop-shadow(0 8px 24px rgba(129,140,248,0.18))", userSelect: "none" }} />
+          </div>
+
+          <div>
+            <div style={{ fontSize: 11, color: "var(--fg-3)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600, marginBottom: 14 }}>
+              Воронка найма · avg {totalFunnelDays} дн. от заявки до оффера
+            </div>
+            <div style={{ background: "var(--surface-1)", border: "1px solid var(--border)", borderRadius: 10, padding: "18px 20px", display: "flex", flexDirection: "column", gap: 11 }}>
+              {funnel.map((f, i) => {
+                const pct = Math.round((f.avgDays / maxFunnelDays) * 100);
+                // Цвет: чем дольше — тем краснее
+                const hue = Math.round(145 - (pct / 100) * 100);
+                const isBottleneck = f.avgDays >= 28;
+                return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "155px 1fr 52px", alignItems: "center", gap: 12 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      {isBottleneck && <span style={{ fontSize: 9, color: "#f97316" }}>▲</span>}
+                      <span style={{ fontSize: 12, color: isBottleneck ? "var(--fg-1)" : "var(--fg-2)", fontWeight: isBottleneck ? 600 : 400, whiteSpace: "nowrap" }}>{f.stage}</span>
+                    </div>
+                    <div style={{ height: 7, background: "var(--border)", borderRadius: 4, overflow: "hidden" }}>
+                      <div className="hgb" style={{
+                        "--tw": `${pct}%`, height: "100%", width: `${pct}%`,
+                        background: `hsl(${hue},70%,45%)`, borderRadius: 4
+                      }} />
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: isBottleneck ? "#f97316" : "var(--fg-1)", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{f.avgDays} дн.</div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 8 }}>
+              ▲ узкие места — стадии дольше 28 дн., замедляют весь процесс
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══ ЗАКРЫТЫЕ НЕДАВНО ═══════════════════════════════════════════════ */}
+      {closed.length > 0 && (
+        <div className="ha4">
+          <div style={{ fontSize: 11, color: "var(--fg-3)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600, marginBottom: 10 }}>
+            Закрытые позиции · {closed.length}
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {closed.slice().reverse().map((p, i) => (
+              <div key={i} style={{
+                background: "var(--surface-1)", border: "1px solid var(--border)",
+                borderRadius: 8, padding: "8px 12px", display: "flex", alignItems: "center", gap: 8
+              }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981" }} />
+                <span style={{ fontSize: 12, color: "var(--fg-2)", fontWeight: 500 }}>{p.position}</span>
+                {p.offers && p.offers.length > 0 && (
+                  <span style={{ fontSize: 11, color: "var(--fg-3)" }}>→ {p.offers[0]}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {updatedAt && (
+        <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 28, textAlign: "right" }}>
+          обновлено {updatedAt} · Google Sheets + Huntflow
+        </div>
+      )}
+    </div>
+  );
+}
+
 Object.assign(window, {
   StatusPill, ProgressBar, KV, Chip, Card, SectionLabel,
   LeverCard, RoadmapStrip, FunnelStrip, CreoPipeline,
   CreoProduction, CreoTeam,
-  StatTile, HealthDonut,
+  StatTile, HealthDonut, CreoHero,
+  HiringTab,
   STATUS_META, fmtDate
 });
