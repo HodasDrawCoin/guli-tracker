@@ -1477,223 +1477,728 @@ function CreoHero({ production, kpis }) {
 }
 
 // =============================================================================
-// HiringTab — Hiring Control Panel
-// Источники: Google Sheets (приоритеты) + Huntflow (TTF, воронка)
+// HiringTab v4 — Reference design: table + donut + characters
 // =============================================================================
 
 function HiringTab({ tab }) {
-  const d        = tab.hiringData || {};
-  const summary  = d.summary  || {};
-  const funnel   = d.funnel   || [];
-  const planNaim = d.planNaim || [];
-  const updatedAt = d.updatedAt;
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => { const t = setTimeout(() => setMounted(true), 80); return () => clearTimeout(t); }, []);
 
-  // Приоритеты: 5=критично, 4=высокий, 3=средний, 2=низкий, 1=беклог, 0=будущее
-  const PRIO = {
-    "5": { label: "Критично",  color: "#ef4444", bg: "#ef444418", dot: "#ef4444" },
-    "4": { label: "Высокий",   color: "#f97316", bg: "#f9731618", dot: "#f97316" },
-    "3": { label: "Средний",   color: "#eab308", bg: "#eab30818", dot: "#eab308" },
-    "2": { label: "Низкий",    color: "#38bdf8", bg: "#38bdf818", dot: "#38bdf8" },
-    "1": { label: "Беклог",    color: "#6b7280", bg: "#6b728018", dot: "#6b7280" },
-    "0": { label: "Будущее",   color: "#4b5563", bg: "#4b556318", dot: "#4b5563" },
-  };
+  // ── позиция персонажа в хэдере (зафиксировано) ──────────────────────────
+  const charTop  = -83;
+  const charLeft =  25;
+  // ── позиция персонажа в блоке "Нанятые в 2026" ──────────────────────────
+  const [char3Top,  setChar3Top]  = React.useState(0);
+  const [char3Left, setChar3Left] = React.useState(0);
+  // ── позиция персонажа в блоке "Отказы" ──────────────────────────────────
+  const [char4Top,  setChar4Top]  = React.useState(110);
+  const [char4Left, setChar4Left] = React.useState(0);
+  // ── позиция персонажа в блоке "Ушли из команды" ─────────────────────────
+  const [char7Top,  setChar7Top]  = React.useState(70);
+  const [char7Left, setChar7Left] = React.useState(40);
 
-  // Только открытые позиции, сортируем по приоритету (5 вверху)
-  const open   = planNaim.filter(p => !p.closed).sort((a,b) => Number(b.priority||0) - Number(a.priority||0));
-  const closed = planNaim.filter(p => p.closed);
+  const d            = tab.hiringData || {};
+  const funnel       = d.funnel        || [];
+  const planNaim     = d.planNaim      || [];
+  const dismissals   = d.dismissals    || [];
+  const offerRefusals = d.offerRefusals || [];
+  const updatedAt    = d.updatedAt;
 
-  // Считаем: нужно нанять всего
-  const totalNeeded = open.reduce((s, p) => s + (p.count || 1), 0);
-  const totalHired  = closed.length;
-  const offerRate   = summary.offersAccepted || "—";
+  const CHAR_R = "assets/characters/222222-removebg-preview.png";
+  const CHAR_L = "assets/characters/1111-removebg-preview.png";
 
-  // Воронка — общее время = сумма всех стадий
-  const totalFunnelDays = funnel.reduce((s, f) => s + f.avgDays, 0);
-  const maxFunnelDays   = funnel.reduce((m, f) => Math.max(m, f.avgDays), 1);
-
-  // Группировка открытых по приоритету
-  const byPrio = {};
-  for (const p of open) {
-    const k = p.priority || "0";
-    if (!byPrio[k]) byPrio[k] = [];
-    byPrio[k].push(p);
+  // ── helpers ───────────────────────────────────────────────────────────────
+  function countNamedOffers(offers) {
+    if (!offers || !offers.length) return 0;
+    return offers.filter(o => o && !o.startsWith("(") && !o.toLowerCase().includes("стоп") && o.trim() !== "").length;
   }
-  const prioKeys = ["5","4","3","2","1","0"].filter(k => byPrio[k]);
+  function prioMeta(n) {
+    return ({
+      "5":{ label:"Критично", color:"#ef4444" },
+      "4":{ label:"Высокий",  color:"#f97316" },
+      "3":{ label:"Средний",  color:"#eab308" },
+      "2":{ label:"Низкий",   color:"#38bdf8" },
+      "1":{ label:"Беклог",   color:"#6b7280" },
+      "0":{ label:"Будущее",  color:"#374151" },
+    })[String(n)] || { label:"—", color:"#374151" };
+  }
 
+  // ── data ──────────────────────────────────────────────────────────────────
+  const closed     = planNaim.filter(p => p.closed);
+  const allOpen    = planNaim.filter(p => !p.closed);
+  const activeOpen = allOpen.filter(p => Number(p.priority||0) >= 1)
+                            .sort((a,b) => Number(b.priority) - Number(a.priority));
+
+  const closedSlots  = closed.length;
+  const activeSlots  = activeOpen.reduce((s,p) => s + (p.count||1), 0);
+  const inProgSlots  = activeOpen.reduce((s,p) => s + Math.min(countNamedOffers(p.offers), p.count||1), 0);
+  const pureOpen     = activeSlots - inProgSlots;
+  const totalSlots   = closedSlots + activeSlots;
+
+  const closedPct  = totalSlots > 0 ? Math.round(closedSlots  / totalSlots * 100) : 0;
+  const inProgPct  = totalSlots > 0 ? Math.round(inProgSlots  / totalSlots * 100) : 0;
+  const openPct    = 100 - closedPct - inProgPct;
+
+  const critNoOffer = activeOpen.filter(p => Number(p.priority) >= 5 && countNamedOffers(p.offers) === 0).length;
+
+  // ── month stats ───────────────────────────────────────────────────────────
+  const MONTHS_RU = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
+  const now          = new Date();
+  const curM = now.getMonth() + 1;  const curY = now.getFullYear();
+  const prevM = curM === 1 ? 12 : curM - 1;
+  const prevY = curM === 1 ? curY - 1 : curY;
+
+  function extractDateFromOffers(offers) {
+    for (const o of (offers || [])) {
+      const m = o.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+      if (m) return { day: +m[1], month: +m[2], year: +m[3] };
+    }
+    return null;
+  }
+
+  const hiredThisMonth = planNaim.filter(p => {
+    const dt = extractDateFromOffers(p.offers);
+    return dt && dt.month === curM && dt.year === curY;
+  }).length;
+
+  const hiredLastMonth = planNaim.filter(p => {
+    const dt = extractDateFromOffers(p.offers);
+    return dt && dt.month === prevM && dt.year === prevY;
+  }).length;
+
+  // hired list — grouped by month
+  const hiredAllRaw = closed
+    .filter(p => p.offers && p.offers.length > 0 && !p.offers[0].startsWith("("))
+    .map(p => {
+      const dt = extractDateFromOffers(p.offers);
+      return { name: p.offers[0].split("(")[0].trim(), role: p.position, dt };
+    });
+
+  // Group by year-month, newest first
+  const hiredByMonthMap = {};
+  hiredAllRaw.forEach(h => {
+    const key = h.dt ? `${h.dt.year}-${String(h.dt.month).padStart(2,"0")}` : "0000-00";
+    if (!hiredByMonthMap[key]) hiredByMonthMap[key] = { month: h.dt?.month||0, year: h.dt?.year||0, people:[] };
+    hiredByMonthMap[key].people.push(h);
+  });
+  const hiredMonths = Object.values(hiredByMonthMap)
+    .sort((a,b) => b.year!==a.year ? b.year-a.year : b.month-a.month);
+
+  const maxFunnelDays = funnel.reduce((m,f) => Math.max(m, f.avgDays), 1);
+
+  // Donut arcs — using strokeDasharray/offset on a single circle per segment
+  const Rd = 50, Cd = 2 * Math.PI * Rd;
+  const seg1 = (closedPct / 100) * Cd;
+  const seg2 = (inProgPct / 100) * Cd;
+  const seg3 = (openPct   / 100) * Cd;
+  // dashOffset: C*0.25 = start at top; subtract prior segments to position next
+  const off1 = Cd * 0.25;
+  const off2 = Cd * 0.25 - seg1;
+  const off3 = Cd * 0.25 - seg1 - seg2;
+
+  // ── CSS ───────────────────────────────────────────────────────────────────
   const CSS = `
-    @keyframes hUp  { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
-    @keyframes hBar { from{width:0} to{width:var(--tw)} }
-    @keyframes hGap { from{stroke-dashoffset:var(--len)} to{stroke-dashoffset:0} }
-    .ha1{animation:hUp .4s ease both}
-    .ha2{animation:hUp .4s .07s ease both}
-    .ha3{animation:hUp .4s .14s ease both}
-    .ha4{animation:hUp .4s .21s ease both}
-    .hgb{animation:hBar .8s .2s ease both}
+    @keyframes hFadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+    @keyframes hBarGrow { from{width:0} to{width:var(--bw)} }
+    @keyframes hPulse   { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .hb1{animation:hFadeUp .35s ease both}
+    .hb2{animation:hFadeUp .4s .06s ease both}
+    .hb3{animation:hFadeUp .4s .12s ease both}
+    .hb4{animation:hFadeUp .4s .18s ease both}
+    .hb5{animation:hFadeUp .4s .22s ease both}
+    .hbr{animation:hBarGrow .9s .2s ease both}
+    .hpulse{animation:hPulse 2s ease infinite}
+    .htrow:hover{background:#ffffff05!important;transition:background .12s}
   `;
 
-  const CHAR_RECRUITER = "assets/characters/222222-removebg-preview.png";
-  const CHAR_LAPTOP    = "assets/characters/1111-removebg-preview.png";
+  // ── avatar chips sub-component ────────────────────────────────────────────
+  function AvatarChips({ total, filled, color }) {
+    const shown = Math.min(total, 8);
+    return (
+      <div style={{ display:"flex", gap:4, alignItems:"center", flexWrap:"wrap" }}>
+        {Array.from({ length: shown }).map((_,i) => (
+          <div key={i} style={{
+            width:32, height:32, borderRadius:"50%", flexShrink:0,
+            overflow:"hidden",
+            // Заполненные — цветная обводка в тон приоритета, пустые — белая полупрозрачная
+            border: i < filled ? `2.5px solid ${color}` : "2px solid rgba(255,255,255,.2)",
+            background: i < filled ? "transparent" : "rgba(255,255,255,.05)",
+            boxShadow: i < filled ? `0 0 8px ${color}66` : "none",
+            transition:"box-shadow .2s"
+          }}>
+            <img src="assets/6.png" alt="" style={{
+              width:"100%", height:"100%", objectFit:"cover", display:"block",
+              filter: i < filled ? "none" : "grayscale(100%) brightness(0.22) contrast(1.1)"
+            }}/>
+          </div>
+        ))}
+        {total > 8 && <span style={{ fontSize:9, color:"var(--fg-3)", marginLeft:2 }}>+{total-8}</span>}
+      </div>
+    );
+  }
 
+  function Stars({ n }) {
+    return (
+      <span>
+        {[1,2,3,4,5].map(i => (
+          <span key={i} style={{ color: i <= n ? "#f59e0b" : "#2d3748", fontSize:12 }}>★</span>
+        ))}
+      </span>
+    );
+  }
+
+  // ── render ────────────────────────────────────────────────────────────────
   return (
-    <div style={{ padding: "20px 0 60px" }}>
+    <div style={{ padding:"16px 0 64px" }}>
       <style>{CSS}</style>
 
-      {/* ══ TOP STRIP ══════════════════════════════════════════════════════ */}
-      <div className="ha1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10, marginBottom: 28 }}>
-        {/* Hiring Gap */}
-        <div style={{ background: "var(--surface-1)", border: "1px solid var(--border)", borderTop: "2px solid #ef4444", borderRadius: 10, padding: "16px 18px" }}>
-          <div style={{ fontSize: 10, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8, fontWeight: 600 }}>Hiring Gap</div>
-          <div style={{ fontSize: 30, fontWeight: 800, color: "#ef4444", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{totalNeeded}</div>
-          <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 4 }}>позиций в активном поиске</div>
+      {/* ══ HERO ══════════════════════════════════════════════════════════════ */}
+      {/* Outer wrapper: no overflow:hidden so character head can escape upward */}
+      <div className="hb1" style={{ position:"relative", marginBottom:20, minHeight:268 }}>
+
+        {/* Background card: clipped separately with border-radius + overflow */}
+        <div style={{ position:"absolute", inset:0, borderRadius:20, overflow:"hidden", zIndex:1 }}>
+          <img src="assets/Back01.png" alt="" style={{
+            width:"100%", height:"100%", objectFit:"cover", objectPosition:"center top", display:"block"
+          }}/>
+          {/* Left dark */}
+          <div style={{ position:"absolute",inset:0,
+            background:"linear-gradient(90deg, rgba(3,7,16,.96) 0%, rgba(3,7,16,.88) 22%, rgba(3,7,16,.38) 36%, transparent 46%, transparent 54%, rgba(3,7,16,.38) 64%, rgba(3,7,16,.88) 78%, rgba(3,7,16,.96) 100%)",
+            pointerEvents:"none"
+          }}/>
+          {/* Bottom fade */}
+          <div style={{ position:"absolute",bottom:0,left:0,right:0,height:52,
+            background:"linear-gradient(to top,rgba(3,7,16,.68),transparent)", pointerEvents:"none"
+          }}/>
         </div>
-        {/* Offer rate */}
-        <div style={{ background: "var(--surface-1)", border: "1px solid var(--border)", borderTop: "2px solid #f97316", borderRadius: 10, padding: "16px 18px" }}>
-          <div style={{ fontSize: 10, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8, fontWeight: 600 }}>Офферов принято</div>
-          <div style={{ fontSize: 30, fontWeight: 800, color: "#f97316", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{offerRate}</div>
-          <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 4 }}>за всё время · закрыто {totalHired} ролей</div>
+
+        {/* Card border overlay (sits on top of everything for visual frame) */}
+        <div style={{ position:"absolute",inset:0,borderRadius:20,border:"1px solid rgba(255,255,255,.13)",zIndex:20,pointerEvents:"none" }}/>
+
+        {/* CHARACTER — позиция управляется через charTop / charLeft */}
+        {/* zIndex:30 — выше рамки (zIndex:20), чтобы голова не обрезалась границей блока */}
+        <div style={{
+          position:"absolute",
+          left:`calc(50% + ${charLeft}px)`, transform:"translateX(-50%)",
+          top:charTop, width:"27%", height:268 - charTop,
+          overflow:"hidden",
+          zIndex:30, pointerEvents:"none", userSelect:"none"
+        }}>
+          <img src="assets/1.png" alt="" style={{
+            display:"block", width:"100%", height:"auto",
+            WebkitMaskImage:"linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)",
+            maskImage:"linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)"
+          }}/>
         </div>
-        {/* Avg TTF */}
-        <div style={{ background: "var(--surface-1)", border: "1px solid var(--border)", borderTop: "2px solid #818cf8", borderRadius: 10, padding: "16px 18px" }}>
-          <div style={{ fontSize: 10, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8, fontWeight: 600 }}>Avg Time to Fill</div>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-            <span style={{ fontSize: 30, fontWeight: 800, color: "#818cf8", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{summary.avgTTF ?? "—"}</span>
-            {summary.avgTTF && <span style={{ fontSize: 13, color: "var(--fg-3)" }}>дн.</span>}
+
+        {/* LEFT panel — title + KPIs */}
+        <div style={{ position:"absolute", left:0, top:0, bottom:0, width:"40%", zIndex:5,
+          display:"flex", flexDirection:"column", justifyContent:"center", padding:"0 24px 0 36px" }}>
+          <div style={{ fontSize:10,color:"#00c896",letterSpacing:2,textTransform:"uppercase",fontWeight:700,marginBottom:10 }}>
+            Guli Games · Команда {curY}
           </div>
-          <div style={{ fontSize: 11, color: summary.avgTTF > 60 ? "#f97316" : "#00c896", marginTop: 4 }}>
-            {summary.avgTTF > 60 ? "⚠ выше целевых 60 дн." : "✓ в норме"}
+          <div style={{ fontSize:28,fontWeight:900,color:"#fff",marginBottom:5,lineHeight:1 }}>
+            План найма 2026
+          </div>
+          <div style={{ fontSize:12,color:"rgba(255,255,255,.48)",marginBottom:20,lineHeight:1.5 }}>
+            Актуальные данные о наборе команды:<br/>план, факт, в поиске и приоритеты.
+          </div>
+          <div style={{ display:"flex", gap:0 }}>
+            {[
+              { label:"План (слотов)", value:totalSlots,  color:"rgba(255,255,255,.92)" },
+              { label:"Закрыто",       value:closedSlots, color:"#10b981" },
+              { label:"Не закрыто",   value:activeSlots,  color:"#f97316" },
+            ].map((m,i) => (
+              <div key={i} style={{
+                background:"rgba(8,18,38,.78)", backdropFilter:"blur(12px)",
+                border:"1px solid rgba(255,255,255,.11)",
+                borderRight: i < 2 ? "none" : undefined,
+                borderRadius: i===0?"10px 0 0 10px": i===2?"0 10px 10px 0":"0",
+                padding:"11px 18px"
+              }}>
+                <div style={{ fontSize:9.5,color:"rgba(255,255,255,.42)",fontWeight:600,marginBottom:3 }}>{m.label}</div>
+                <div style={{ fontSize:32,fontWeight:900,lineHeight:1,color:m.color,fontVariantNumeric:"tabular-nums" }}>{m.value}</div>
+              </div>
+            ))}
           </div>
         </div>
-        {/* Days in progress */}
-        <div style={{ background: "var(--surface-1)", border: "1px solid var(--border)", borderTop: "2px solid #00c896", borderRadius: 10, padding: "16px 18px" }}>
-          <div style={{ fontSize: 10, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8, fontWeight: 600 }}>Avg в работе</div>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-            <span style={{ fontSize: 30, fontWeight: 800, color: "#00c896", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{summary.avgDaysInProgress ?? "—"}</span>
-            {summary.avgDaysInProgress && <span style={{ fontSize: 13, color: "var(--fg-3)" }}>дн.</span>}
-          </div>
-          <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 4 }}>среднее время на вакансию</div>
+
+        {/* RIGHT panel — month stats */}
+        <div style={{ position:"absolute", right:0, top:0, bottom:0, width:"22%", zIndex:5,
+          display:"flex", flexDirection:"column", justifyContent:"center", padding:"0 36px 0 20px", gap:12 }}>
+          {[
+            { label:`Нанято в ${MONTHS_RU[curM-1].toLowerCase()}`,  value:hiredThisMonth, color:"#00c896" },
+            { label:`Нанято в ${MONTHS_RU[prevM-1].toLowerCase()}`,  value:hiredLastMonth, color:"#818cf8" },
+          ].map((s,i) => (
+            <div key={i} style={{
+              background:"rgba(8,18,38,.72)", backdropFilter:"blur(12px)",
+              border:"1px solid rgba(255,255,255,.1)", borderRadius:12,
+              padding:"14px 18px"
+            }}>
+              <div style={{ fontSize:9,color:"rgba(255,255,255,.38)",fontWeight:700,letterSpacing:.6,textTransform:"uppercase",marginBottom:4 }}>
+                {s.label}
+              </div>
+              <div style={{ fontSize:30,fontWeight:900,color:s.color,lineHeight:1 }}>{s.value}</div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* ══ PRIORITY ROLES + ПЕРСОНАЖ ══════════════════════════════════════ */}
-      <div className="ha2" style={{ display: "grid", gridTemplateColumns: "1fr 200px", gap: 0, marginBottom: 28, alignItems: "start" }}>
-        <div>
-          <div style={{ fontSize: 11, color: "var(--fg-3)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600, marginBottom: 14 }}>
-            Активный поиск · {open.length} позиций
+      {/* ══ MAIN 2-COLUMN GRID ════════════════════════════════════════════════ */}
+      <div className="hb2" style={{ display:"grid", gridTemplateColumns:"1fr 480px", gap:18, marginBottom:18 }}>
+
+        {/* LEFT — Table "План vs факт" */}
+        <div style={{ background:"var(--surface-1)", border:"1px solid rgba(255,255,255,.13)", borderRadius:16, overflow:"hidden", boxShadow:"0 1px 3px rgba(0,0,0,.4)" }}>
+
+          {/* Table header */}
+          <div style={{ padding:"16px 18px 12px", borderBottom:"1px solid var(--border)" }}>
+            <span style={{ fontSize:14,fontWeight:700,color:"var(--fg-0)" }}>План vs факт по ролям</span>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {prioKeys.map(pk => {
-              const tier = PRIO[pk] || PRIO["0"];
-              const roles = byPrio[pk];
-              return (
-                <div key={pk} style={{ background: "var(--surface-1)", border: `1px solid var(--border)`, borderLeft: `3px solid ${tier.color}`, borderRadius: 10, overflow: "hidden" }}>
-                  {/* Tier header */}
-                  <div style={{ padding: "8px 14px", background: tier.bg, display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: tier.color, boxShadow: `0 0 6px ${tier.color}` }} />
-                    <span style={{ fontSize: 11, fontWeight: 700, color: tier.color, textTransform: "uppercase", letterSpacing: 0.8 }}>{tier.label}</span>
-                    <span style={{ fontSize: 11, color: "var(--fg-3)", marginLeft: "auto" }}>{roles.reduce((s,r) => s+(r.count||1), 0)} позиц.</span>
+          {/* Column headers */}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 56px 68px 1fr 100px 90px", gap:6, padding:"9px 18px", borderBottom:"1px solid var(--border)" }}>
+            {["Роль","Нужно","В оффере","В поиске","Приоритет","Уровень"].map(h => (
+              <div key={h} style={{ fontSize:9.5,color:"var(--fg-3)",fontWeight:700,textTransform:"uppercase",letterSpacing:.7 }}>{h}</div>
+            ))}
+          </div>
+
+          {/* Rows */}
+          {activeOpen.map((r, i) => {
+            const pm      = prioMeta(r.priority);
+            const inOffer = Math.min(countNamedOffers(r.offers), r.count||1);
+            const prio    = Number(r.priority || 0);
+            const isCrit  = prio >= 5;
+            // Glow intensity по приоритету
+            const glowOpacity = prio >= 5 ? "30" : prio >= 4 ? "1c" : prio >= 3 ? "0e" : "00";
+            const rowGlow = prio >= 3
+              ? `inset 3px 0 24px ${pm.color}${glowOpacity}, inset 0 0 8px ${pm.color}08`
+              : "none";
+            // Уровень сотрудника
+            const lvlRaw  = (r.level || "").trim();
+            const lvlMeta = lvlRaw.toLowerCase().includes("senior") || lvlRaw.toLowerCase().includes("сеньор")
+              ? { label:"Senior", color:"#818cf8", bg:"rgba(129,140,248,.14)" }
+              : lvlRaw.toLowerCase().includes("junior") || lvlRaw.toLowerCase().includes("джун")
+              ? { label:"Junior", color:"#34d399", bg:"rgba(52,211,153,.12)" }
+              : lvlRaw.toLowerCase().includes("lead") || lvlRaw.toLowerCase().includes("лид")
+              ? { label:"Lead",   color:"#f59e0b", bg:"rgba(245,158,11,.14)" }
+              : lvlRaw.toLowerCase().includes("middle") || lvlRaw.toLowerCase().includes("миддл")
+              ? { label:"Middle", color:"#f97316", bg:"rgba(249,115,22,.12)" }
+              : lvlRaw
+              ? { label: lvlRaw,  color:"#94a3b8", bg:"rgba(148,163,184,.10)" }
+              : null;
+
+            return (
+              <div key={i} className="htrow" style={{
+                display:"grid", gridTemplateColumns:"1fr 56px 68px 1fr 100px 90px",
+                gap:6, padding:"10px 18px",
+                borderBottom: i < activeOpen.length-1 ? "1px solid var(--border)":"none",
+                borderLeft:`3px solid ${pm.color}`,
+                boxShadow: rowGlow,
+                background: i%2===0 ? "#ffffff02":"transparent"
+              }}>
+                {/* Role */}
+                <div style={{ display:"flex", alignItems:"center", gap:8, minWidth:0 }}>
+                  <div style={{
+                    width:26, height:26, borderRadius:7, flexShrink:0,
+                    background:`${pm.color}18`, border:`1px solid ${pm.color}28`,
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                    fontSize:10, fontWeight:800, color:pm.color
+                  }}>
+                    {r.position.replace(/[^A-ZА-Яa-zа-я]/g,"")[0]?.toUpperCase() || "?"}
                   </div>
-                  {/* Role rows */}
-                  {roles.map((r, i) => (
-                    <div key={i} style={{
-                      display: "grid", gridTemplateColumns: "1fr auto auto",
-                      alignItems: "center", gap: 12,
-                      padding: "10px 14px",
-                      borderTop: i > 0 ? "1px solid var(--border)" : undefined,
+                  <span style={{ fontSize:12,fontWeight:600,color:"var(--fg-0)",lineHeight:1.25,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>
+                    {r.position}
+                  </span>
+                </div>
+                {/* Нужно */}
+                <div style={{ fontSize:15,fontWeight:700,color:"var(--fg-1)",alignSelf:"center" }}>{r.count||1}</div>
+                {/* В оффере */}
+                <div style={{ fontSize:15,fontWeight:700,color:inOffer>0?"#f97316":"var(--fg-3)",alignSelf:"center" }}>{inOffer}</div>
+                {/* Chips */}
+                <div style={{ alignSelf:"center" }}>
+                  <AvatarChips total={r.count||1} filled={inOffer} color={pm.color}/>
+                </div>
+                {/* Priority stars */}
+                <div style={{ display:"flex", alignItems:"center", gap:4, alignSelf:"center" }}>
+                  <Stars n={prio}/>
+                  {isCrit && (
+                    <span className="hpulse" style={{ fontSize:8,color:"#ef4444",fontWeight:800,letterSpacing:.5 }}>КРИТ</span>
+                  )}
+                </div>
+                {/* Уровень */}
+                <div style={{ alignSelf:"center" }}>
+                  {lvlMeta ? (
+                    <span style={{
+                      display:"inline-block", padding:"3px 9px", borderRadius:6,
+                      background:lvlMeta.bg, color:lvlMeta.color,
+                      border:`1px solid ${lvlMeta.color}44`,
+                      fontSize:10, fontWeight:700, letterSpacing:.3
+                    }}>{lvlMeta.label}</span>
+                  ) : (
+                    <span style={{ fontSize:10, color:"var(--fg-3)" }}>—</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Totals row */}
+          {(() => {
+            const critCount = activeOpen.filter(r => Number(r.priority||0) >= 5).length;
+            return (
+              <div style={{
+                display:"grid", gridTemplateColumns:"1fr 56px 68px 1fr 100px 90px",
+                gap:6, padding:"12px 18px",
+                borderTop:"2px solid rgba(255,255,255,.1)",
+                background:"rgba(255,255,255,.025)"
+              }}>
+                <div style={{ fontSize:10,fontWeight:800,color:"var(--fg-3)",textTransform:"uppercase",letterSpacing:.6,alignSelf:"center" }}>
+                  Итого позиций
+                </div>
+                <div style={{ alignSelf:"center" }}>
+                  <div style={{ fontSize:18,fontWeight:900,color:"var(--fg-0)",lineHeight:1 }}>{activeSlots}</div>
+                  <div style={{ fontSize:9,color:"var(--fg-3)" }}>слотов</div>
+                </div>
+                <div style={{ alignSelf:"center" }}>
+                  <div style={{ fontSize:18,fontWeight:900,color:"#f97316",lineHeight:1 }}>{inProgSlots}</div>
+                  <div style={{ fontSize:9,color:"var(--fg-3)" }}>в оффере</div>
+                </div>
+                <div style={{ alignSelf:"center" }} />
+                <div style={{ alignSelf:"center", gridColumn:"5 / 7" }}>
+                  {critCount > 0 && (
+                    <span className="hpulse" style={{
+                      display:"inline-flex", alignItems:"center", gap:6,
+                      padding:"5px 11px", borderRadius:8,
+                      background:"rgba(239,68,68,.12)", border:"1px solid rgba(239,68,68,.3)",
+                      color:"#fca5a5", fontSize:11, fontWeight:700
                     }}>
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--fg-0)" }}>{r.position}</div>
-                        {r.comment && <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 1 }}>{r.comment}</div>}
+                      🔴 {critCount} критических позиций
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* RIGHT column — Нанятые в 2026 */}
+        <div style={{ position:"relative", borderRadius:16, overflow:"hidden", border:"1px solid rgba(255,255,255,.13)", boxShadow:"0 1px 3px rgba(0,0,0,.4)" }}>
+
+          {/* Background */}
+          <div style={{ position:"absolute", inset:0, zIndex:0 }}>
+            <img src="assets/Back02.png" alt="" style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition:"center", display:"block" }}/>
+            <div style={{ position:"absolute", inset:0, background:"linear-gradient(135deg, rgba(3,7,18,.92) 0%, rgba(3,7,18,.75) 50%, rgba(3,7,18,.55) 100%)" }}/>
+          </div>
+
+          {/* Character 3 */}
+          <img src="assets/3.png" alt="" style={{
+            position:"absolute",
+            right: `calc(0% + ${char3Left}px)`,
+            bottom: `calc(0% + ${-char3Top}px)`,
+            width:"58%", height:"auto",
+            zIndex:1, pointerEvents:"none", userSelect:"none",
+            filter:"drop-shadow(0 8px 32px rgba(100,120,255,.25))"
+          }}/>
+
+          {/* Content */}
+          <div style={{ position:"relative", zIndex:2, padding:"24px 22px 20px" }}>
+            <div style={{ fontSize:18, fontWeight:900, color:"#fff", marginBottom:4 }}>Нанятые в 2026</div>
+            <div style={{ fontSize:12, color:"#00c896", fontWeight:700, marginBottom:20 }}>{closedSlots} {closedSlots===1?"человек":closedSlots<5?"человека":"человек"}</div>
+
+            {/* Month groups — только последние 2 месяца */}
+            <div style={{ display:"flex", flexDirection:"column", gap:18 }}>
+              {hiredMonths.slice(0, 2).map((mg, mi) => (
+                <div key={mi}>
+                  {/* Month label */}
+                  <div style={{
+                    fontSize:9.5, fontWeight:800, color:"rgba(255,255,255,.38)",
+                    textTransform:"uppercase", letterSpacing:1.2, marginBottom:10,
+                    display:"flex", alignItems:"center", gap:8
+                  }}>
+                    <div style={{ flex:1, height:1, background:"rgba(255,255,255,.08)" }}/>
+                    {mg.year > 0 ? `${MONTHS_RU[(mg.month||1)-1]} ${mg.year}` : "Без даты"}
+                    <div style={{ flex:1, height:1, background:"rgba(255,255,255,.08)" }}/>
+                  </div>
+
+                  {/* People in this month */}
+                  <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                    {mg.people.map((h,pi) => (
+                      <div key={pi} style={{ display:"flex", alignItems:"center", gap:12 }}>
+                        <div style={{
+                          width:36, height:36, borderRadius:"50%", flexShrink:0,
+                          overflow:"hidden",
+                          border:"2px solid rgba(0,200,150,.35)",
+                          background:"rgba(0,200,150,.1)",
+                          display:"flex", alignItems:"center", justifyContent:"center",
+                          fontSize:13, fontWeight:800, color:"#00c896"
+                        }}>
+                          {h.name.trim()[0]?.toUpperCase()||"?"}
+                        </div>
+                        <div style={{ minWidth:0 }}>
+                          <div style={{ fontSize:13, fontWeight:700, color:"#fff", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{h.name}</div>
+                          <div style={{ fontSize:11, color:"rgba(255,255,255,.45)", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{h.role}</div>
+                        </div>
                       </div>
-                      {r.count > 1 && (
-                        <div style={{ fontSize: 12, color: "var(--fg-3)", whiteSpace: "nowrap" }}>×{r.count}</div>
-                      )}
-                      <div>
-                        {r.offers && r.offers.length > 0
-                          ? <span style={{ fontSize: 10, padding: "3px 9px", borderRadius: 999, background: "#f9731618", color: "#f97316", fontWeight: 700, whiteSpace: "nowrap" }}>ОФФЕР</span>
-                          : <span style={{ fontSize: 10, padding: "3px 9px", borderRadius: 999, background: "#00c89618", color: "#00c896", fontWeight: 700, whiteSpace: "nowrap" }}>В ПОИСКЕ</span>
-                        }
-                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Смотреть всех */}
+            <div style={{ marginTop:20 }}>
+              <span style={{ fontSize:12, color:"#00c896", fontWeight:700, cursor:"pointer", display:"inline-flex", alignItems:"center", gap:5 }}>
+                Смотреть всех <span style={{ fontSize:14 }}>→</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Char3 position controls */}
+          <div style={{
+            position:"absolute", bottom:8, left:8, zIndex:10,
+            display:"flex", gap:4, flexWrap:"wrap",
+            background:"rgba(0,0,0,.55)", backdropFilter:"blur(8px)",
+            borderRadius:8, padding:"5px 8px"
+          }}>
+            {[
+              { label:"↑", action:() => setChar3Top(t=>t-10) },
+              { label:"↓", action:() => setChar3Top(t=>t+10) },
+              { label:"←", action:() => setChar3Left(l=>l-10) },
+              { label:"→", action:() => setChar3Left(l=>l+10) },
+            ].map(b => (
+              <button key={b.label} onClick={b.action} style={{
+                background:"rgba(255,255,255,.1)", border:"1px solid rgba(255,255,255,.15)",
+                borderRadius:5, color:"#fff", fontSize:12, width:24, height:24,
+                cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:0
+              }}>{b.label}</button>
+            ))}
+            <span style={{ fontSize:9, color:"rgba(255,255,255,.4)", alignSelf:"center", marginLeft:2 }}>
+              {char3Left},{char3Top}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ══ НИЖНИЕ БЛОКИ: Отказы + Ушли из команды ═════════════════════════ */}
+      {(() => {
+        // Реальные отказы от офферов из таблицы, только текущий год
+        const rejCurYear = offerRefusals.filter(r => r.year === String(curY));
+        const rejCount   = rejCurYear.length;
+
+        // Вспомогательная панель управления персонажем
+        function CharCtrl({ setTop, setLeft, top, left }) {
+          return (
+            <div style={{
+              position:"absolute", bottom:10, left:10, zIndex:10,
+              display:"flex", gap:3,
+              background:"rgba(0,0,0,.6)", backdropFilter:"blur(8px)",
+              borderRadius:8, padding:"5px 8px", alignItems:"center"
+            }}>
+              {[["↑",()=>setTop(t=>t-10)],["↓",()=>setTop(t=>t+10)],["←",()=>setLeft(l=>l-10)],["→",()=>setLeft(l=>l+10)]].map(([lbl,fn]) => (
+                <button key={lbl} onClick={fn} style={{
+                  background:"rgba(255,255,255,.1)", border:"1px solid rgba(255,255,255,.15)",
+                  borderRadius:5, color:"#fff", fontSize:12, width:24, height:24,
+                  cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:0
+                }}>{lbl}</button>
+              ))}
+              <span style={{ fontSize:9, color:"rgba(255,255,255,.35)", marginLeft:3 }}>{left},{top}</span>
+            </div>
+          );
+        }
+
+        return (
+          <div className="hb5" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:18, marginTop:18 }}>
+
+            {/* ── Отказы от офферов ── */}
+            <div style={{ position:"relative", borderRadius:16, overflow:"hidden", border:"1px solid rgba(255,255,255,.13)", minHeight:320, boxShadow:"0 1px 3px rgba(0,0,0,.4)" }}>
+              {/* Bg */}
+              <div style={{ position:"absolute", inset:0, zIndex:0 }}>
+                <img src="assets/Back01.png" alt="" style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition:"center", display:"block" }}/>
+                <div style={{ position:"absolute", inset:0, background:"linear-gradient(120deg, rgba(3,7,18,.93) 0%, rgba(3,7,18,.78) 45%, rgba(3,7,18,.45) 100%)" }}/>
+              </div>
+              {/* Char 4 */}
+              <img src="assets/4.png" alt="" style={{
+                position:"absolute",
+                right:`calc(0% + ${char4Left}px)`, bottom:`calc(0% + ${-char4Top}px)`,
+                width:"52%", height:"auto", zIndex:1, pointerEvents:"none", userSelect:"none",
+                filter:"drop-shadow(0 8px 28px rgba(239,68,68,.2))"
+              }}/>
+              {/* Content */}
+              <div style={{ position:"relative", zIndex:2, padding:"26px 24px 20px", maxWidth:"52%" }}>
+                <div style={{ fontSize:18, fontWeight:900, color:"#fff", marginBottom:3 }}>Отказы от офферов</div>
+                <div style={{ fontSize:11, color:"rgba(255,255,255,.4)", marginBottom:16 }}>В {curY} году</div>
+                <div style={{ fontSize:40, fontWeight:900, color:"#ef4444", lineHeight:1, marginBottom:4 }}>{rejCount}</div>
+                <div style={{ fontSize:12, color:"rgba(255,255,255,.45)", marginBottom:20 }}>
+                  {rejCount===1?"отказ":rejCount<5?"отказа":"отказов"}
+                </div>
+                {rejCount > 0 && (
+                  <>
+                    <div style={{ fontSize:10, fontWeight:700, color:"rgba(255,255,255,.35)", textTransform:"uppercase", letterSpacing:.8, marginBottom:12 }}>Кто отказался</div>
+                    <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                      {rejCurYear.map((r,i) => (
+                        <div key={i} style={{ borderLeft:"2px solid rgba(239,68,68,.4)", paddingLeft:10 }}>
+                          <div style={{ fontSize:12, fontWeight:700, color:"#fff", marginBottom:2 }}>{r.name}</div>
+                          <div style={{ fontSize:10, color:"rgba(255,255,255,.45)", marginBottom:4 }}>{r.role}</div>
+                          {r.reason && (
+                            <div style={{ fontSize:10, color:"rgba(255,255,255,.55)", lineHeight:1.45 }}>
+                              {r.reason.length > 80 ? r.reason.slice(0,80)+"…" : r.reason}
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </>
+                )}
+                {rejCount === 0 && (
+                  <div style={{ fontSize:12, color:"rgba(255,255,255,.3)" }}>Данных пока нет</div>
+                )}
+              </div>
+              <CharCtrl top={char4Top} setTop={setChar4Top} left={char4Left} setLeft={setChar4Left}/>
+            </div>
+
+            {/* ── Ушли из команды ── */}
+            <div style={{ position:"relative", borderRadius:16, overflow:"hidden", border:"1px solid rgba(255,255,255,.13)", minHeight:320, boxShadow:"0 1px 3px rgba(0,0,0,.4)" }}>
+              {/* Bg */}
+              <div style={{ position:"absolute", inset:0, zIndex:0 }}>
+                <img src="assets/Back02.png" alt="" style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition:"center", display:"block" }}/>
+                <div style={{ position:"absolute", inset:0, background:"linear-gradient(120deg, rgba(3,7,18,.93) 0%, rgba(3,7,18,.78) 45%, rgba(3,7,18,.45) 100%)" }}/>
+              </div>
+              {/* Char 7 */}
+              <img src="assets/7.png" alt="" style={{
+                position:"absolute",
+                right:`calc(0% + ${char7Left}px)`, bottom:`calc(0% + ${-char7Top}px)`,
+                width:"52%", height:"auto", zIndex:1, pointerEvents:"none", userSelect:"none",
+                filter:"drop-shadow(0 8px 28px rgba(129,140,248,.25))"
+              }}/>
+              {/* Content */}
+              <div style={{ position:"relative", zIndex:2, padding:"26px 24px 70px", maxWidth:"52%" }}>
+                <div style={{ fontSize:18, fontWeight:900, color:"#fff", marginBottom:3 }}>Ушли из команды</div>
+                <div style={{ fontSize:12, color:"#818cf8", fontWeight:700, marginBottom:20 }}>
+                  {dismissals.length} {dismissals.length===1?"человек":dismissals.length<5?"человека":"человек"} в {curY}
+                </div>
+                {dismissals.length === 0 ? (
+                  <div style={{ fontSize:12, color:"rgba(255,255,255,.25)", fontStyle:"italic", marginTop:8 }}>
+                    Данных пока нет
+                  </div>
+                ) : (
+                  <div style={{ display:"flex", flexDirection:"column", gap:11 }}>
+                    {dismissals.map((dis,i) => (
+                      <div key={i} style={{ display:"flex", alignItems:"center", gap:12 }}>
+                        <div style={{
+                          width:34, height:34, borderRadius:"50%", flexShrink:0,
+                          background:"rgba(129,140,248,.12)", border:"2px solid rgba(129,140,248,.3)",
+                          display:"flex", alignItems:"center", justifyContent:"center",
+                          fontSize:12, fontWeight:800, color:"#818cf8"
+                        }}>
+                          {dis.name.trim()[0]?.toUpperCase()||"?"}
+                        </div>
+                        <div style={{ minWidth:0 }}>
+                          <div style={{ fontSize:13, fontWeight:700, color:"#fff", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{dis.name}</div>
+                          <div style={{ fontSize:11, color:"rgba(255,255,255,.4)", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                            {dis.role}{dis.date ? ` · ${dis.date}` : ""}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div style={{ marginTop:22 }}>
+                  <span style={{ fontSize:12, color:"#818cf8", fontWeight:700, cursor:"pointer", display:"inline-flex", alignItems:"center", gap:5 }}>
+                    Смотреть всех <span style={{ fontSize:14 }}>→</span>
+                  </span>
+                </div>
+              </div>
+              <CharCtrl top={char7Top} setTop={setChar7Top} left={char7Left} setLeft={setChar7Left}/>
+            </div>
+
+          </div>
+        );
+      })()}
+
+      {/* ══ FUNNEL — compact horizontal ══════════════════════════════════════ */}
+      {funnel.length > 0 && (
+        <div className="hb3" style={{ background:"var(--surface-1)", border:"1px solid var(--border)", borderRadius:16, overflow:"hidden", marginBottom:18 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10, padding:"14px 18px 10px", borderBottom:"1px solid var(--border)" }}>
+            <span style={{ fontSize:13,fontWeight:700,color:"var(--fg-0)" }}>Ключевые узкие места</span>
+            <span style={{ fontSize:11,color:"var(--fg-3)" }}>· среднее время по стадиям воронки</span>
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:`repeat(${funnel.length},1fr)`, overflowX:"auto" }}>
+            {funnel.map((f,i) => {
+              const isHot = f.avgDays >= 25;
+              const pct   = Math.round((f.avgDays / maxFunnelDays) * 100);
+              return (
+                <div key={i} style={{
+                  padding:"12px 14px", minWidth:90,
+                  borderRight: i < funnel.length-1 ? "1px solid var(--border)":"none",
+                  background: isHot ? "#f9731606":"transparent"
+                }}>
+                  <div style={{ fontSize:9.5,color:"var(--fg-3)",marginBottom:8,lineHeight:1.3 }}>
+                    {isHot && <span style={{color:"#f97316"}}>● </span>}{f.stage}
+                  </div>
+                  <div style={{ position:"relative",height:3,background:"var(--border)",borderRadius:2,marginBottom:8 }}>
+                    <div className="hbr" style={{
+                      "--bw":`${pct}%`, position:"absolute",left:0,top:0,bottom:0,
+                      width:`${pct}%`, background:isHot?"#f97316":"#00c896", borderRadius:2
+                    }}/>
+                  </div>
+                  <div style={{ fontSize:20,fontWeight:800,color:isHot?"#f97316":"var(--fg-1)" }}>
+                    {f.avgDays}<span style={{fontSize:9,fontWeight:400,color:"var(--fg-3)",marginLeft:2}}>дн</span>
+                  </div>
                 </div>
               );
             })}
           </div>
         </div>
-
-        {/* Персонаж — рекрутер */}
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-end", paddingLeft: 12, marginTop: 30 }}>
-          <img src={CHAR_RECRUITER} alt="" style={{ width: 180, height: "auto", filter: "drop-shadow(0 8px 24px rgba(0,200,150,0.18))", userSelect: "none" }} />
-        </div>
-      </div>
-
-      {/* ══ PIPELINE FUNNEL + ПЕРСОНАЖ ═════════════════════════════════════ */}
-      {funnel.length > 0 && (
-        <div className="ha3" style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 0, marginBottom: 28, alignItems: "start" }}>
-          {/* Персонаж — аналитик */}
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-end", paddingRight: 12, marginTop: 30 }}>
-            <img src={CHAR_LAPTOP} alt="" style={{ width: 175, height: "auto", filter: "drop-shadow(0 8px 24px rgba(129,140,248,0.18))", userSelect: "none" }} />
-          </div>
-
-          <div>
-            <div style={{ fontSize: 11, color: "var(--fg-3)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600, marginBottom: 14 }}>
-              Воронка найма · avg {totalFunnelDays} дн. от заявки до оффера
-            </div>
-            <div style={{ background: "var(--surface-1)", border: "1px solid var(--border)", borderRadius: 10, padding: "18px 20px", display: "flex", flexDirection: "column", gap: 11 }}>
-              {funnel.map((f, i) => {
-                const pct = Math.round((f.avgDays / maxFunnelDays) * 100);
-                // Цвет: чем дольше — тем краснее
-                const hue = Math.round(145 - (pct / 100) * 100);
-                const isBottleneck = f.avgDays >= 28;
-                return (
-                  <div key={i} style={{ display: "grid", gridTemplateColumns: "155px 1fr 52px", alignItems: "center", gap: 12 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      {isBottleneck && <span style={{ fontSize: 9, color: "#f97316" }}>▲</span>}
-                      <span style={{ fontSize: 12, color: isBottleneck ? "var(--fg-1)" : "var(--fg-2)", fontWeight: isBottleneck ? 600 : 400, whiteSpace: "nowrap" }}>{f.stage}</span>
-                    </div>
-                    <div style={{ height: 7, background: "var(--border)", borderRadius: 4, overflow: "hidden" }}>
-                      <div className="hgb" style={{
-                        "--tw": `${pct}%`, height: "100%", width: `${pct}%`,
-                        background: `hsl(${hue},70%,45%)`, borderRadius: 4
-                      }} />
-                    </div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: isBottleneck ? "#f97316" : "var(--fg-1)", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{f.avgDays} дн.</div>
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 8 }}>
-              ▲ узкие места — стадии дольше 28 дн., замедляют весь процесс
-            </div>
-          </div>
-        </div>
       )}
 
-      {/* ══ ЗАКРЫТЫЕ НЕДАВНО ═══════════════════════════════════════════════ */}
-      {closed.length > 0 && (
-        <div className="ha4">
-          <div style={{ fontSize: 11, color: "var(--fg-3)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600, marginBottom: 10 }}>
-            Закрытые позиции · {closed.length}
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {closed.slice().reverse().map((p, i) => (
-              <div key={i} style={{
-                background: "var(--surface-1)", border: "1px solid var(--border)",
-                borderRadius: 8, padding: "8px 12px", display: "flex", alignItems: "center", gap: 8
-              }}>
-                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981" }} />
-                <span style={{ fontSize: 12, color: "var(--fg-2)", fontWeight: 500 }}>{p.position}</span>
-                {p.offers && p.offers.length > 0 && (
-                  <span style={{ fontSize: 11, color: "var(--fg-3)" }}>→ {p.offers[0]}</span>
-                )}
+      {/* ══ BOTTOM 2-COL: Узкие места + Что делаем ══════════════════════════ */}
+      <div className="hb4" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:18 }}>
+
+        {/* Узкие места */}
+        <div style={{ background:"var(--surface-1)", border:"1px solid var(--border)", borderRadius:16, padding:"20px" }}>
+          <div style={{ fontSize:13,fontWeight:700,color:"var(--fg-0)",marginBottom:16 }}>Ключевые узкие места</div>
+          <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+            {[
+              { icon:"⏱", title:"Долгий цикл найма", desc:"Среднее время закрытия ролей слишком высокое. Особенно по senior и creative." },
+              { icon:"❌", title:"Потери на оффере",  desc:"Кандидаты уходят к конкурентам или сомневаются на этапе принятия решения." },
+              { icon:"👥", title:"Слабый поток кандидатов", desc:"Недостаточный входящий поток на ключевые позиции (Motion, Creative, QA)." },
+            ].map((b,i) => (
+              <div key={i} style={{ display:"flex", gap:12, alignItems:"flex-start" }}>
+                <div style={{ width:36,height:36,borderRadius:10,background:"#ef444412",border:"1px solid #ef444428",
+                  flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17 }}>{b.icon}</div>
+                <div>
+                  <div style={{ fontSize:12,fontWeight:700,color:"var(--fg-0)",marginBottom:2 }}>{b.title}</div>
+                  <div style={{ fontSize:11,color:"var(--fg-3)",lineHeight:1.45 }}>{b.desc}</div>
+                </div>
               </div>
             ))}
           </div>
         </div>
-      )}
+
+        {/* Что делаем дальше */}
+        <div style={{ background:"var(--surface-1)", border:"1px solid var(--border)", borderRadius:16, padding:"20px" }}>
+          <div style={{ fontSize:13,fontWeight:700,color:"var(--fg-0)",marginBottom:16 }}>Что делаем дальше</div>
+          <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+            {[
+              { icon:"🎯", title:"Ускорить закрытие Motion (4 слота)", desc:"Сфокусироваться на быстром закрытии ключевой роли." },
+              { icon:"🤝", title:"Снизить отказы от офферов",          desc:"Улучшить предложение и процесс коммуникации с кандидатами." },
+              { icon:"👔", title:"Усилить поток на Creative Producer",  desc:"Критичная роль — влияет на весь крео-процесс команды." },
+              { icon:"🛡", title:"Стабилизировать команду (churn)",     desc:"Работать с удержанием и мотивацией текущих сотрудников." },
+            ].map((a,i) => (
+              <div key={i} style={{ display:"flex", gap:12, alignItems:"flex-start" }}>
+                <div style={{ width:36,height:36,borderRadius:10,background:"#00c89612",border:"1px solid #00c89622",
+                  flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17 }}>{a.icon}</div>
+                <div>
+                  <div style={{ fontSize:12,fontWeight:700,color:"var(--fg-0)",marginBottom:2 }}>{a.title}</div>
+                  <div style={{ fontSize:11,color:"var(--fg-3)",lineHeight:1.45 }}>{a.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {updatedAt && (
-        <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 28, textAlign: "right" }}>
+        <div style={{ fontSize:10,color:"var(--fg-3)",marginTop:22,textAlign:"right",opacity:.5 }}>
           обновлено {updatedAt} · Google Sheets + Huntflow
         </div>
       )}

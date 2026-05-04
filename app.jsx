@@ -326,7 +326,7 @@ function TabPage({ tab }) {
 
   return (
     <div style={{ padding: "24px 32px 60px" }}>
-      {!tab.placeholder && tab.id !== "creo" && (
+      {!tab.placeholder && tab.id !== "creo" && tab.id !== "team" && (
         <div style={{
           display: "grid", gridTemplateColumns: "1.1fr 0.9fr 1.4fr", gap: 12, marginBottom: 16
         }}>

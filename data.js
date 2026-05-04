@@ -464,7 +464,7 @@ window.__GULI_DATA__ = {
       subtitle: "Hiring и состав",
       // %%HIRING_SYNC_START%%
       hiringData: {
-        updatedAt: "2026-05-03",
+        updatedAt: "2026-05-04",
         summary: {
           openPositions: 0,
           offersAccepted: "3/18",
@@ -493,7 +493,8 @@ window.__GULI_DATA__ = {
           offers: ["Victoria Kazantseva (выход 08/12/2025)"],
           comment: "",
           priority: "5",
-          division: ""
+          division: "",
+          level: "Middle"
         },
         {
           position: "QA Engineer",
@@ -502,7 +503,8 @@ window.__GULI_DATA__ = {
           offers: ["Anton Zhuk", "(выход 01/12/2025)"],
           comment: "",
           priority: "5",
-          division: ""
+          division: "",
+          level: "Middle"
         },
         {
           position: "Tech artist (Unity)",
@@ -511,7 +513,8 @@ window.__GULI_DATA__ = {
           offers: ["Voronkova Svetlana", "(выход 26/01/2026)"],
           comment: "",
           priority: "3",
-          division: ""
+          division: "",
+          level: "Senior"
         },
         {
           position: "2D Artist (маркетинг) +",
@@ -520,7 +523,8 @@ window.__GULI_DATA__ = {
           offers: ["Alexand Dolgov", "(выход 26/01/2026)"],
           comment: "",
           priority: "4",
-          division: ""
+          division: "",
+          level: "Middle"
         },
         {
           position: "QA Engineer",
@@ -529,7 +533,8 @@ window.__GULI_DATA__ = {
           offers: ["Max Abramchuk", "(выход 09/03/2026)"],
           comment: "",
           priority: "2",
-          division: ""
+          division: "",
+          level: "Middle"
         },
         {
           position: "2D Artist",
@@ -538,7 +543,8 @@ window.__GULI_DATA__ = {
           offers: ["Haidar Mikhail", "(выход 16/03/2026)"],
           comment: "",
           priority: "4",
-          division: ""
+          division: "",
+          level: "Middle"
         },
         {
           position: "Tech LD",
@@ -547,7 +553,8 @@ window.__GULI_DATA__ = {
           offers: ["Vasil Chaichyts", "(выход 30/03/2026)"],
           comment: "",
           priority: "4",
-          division: ""
+          division: "",
+          level: "Junior, Middle"
         },
         {
           position: "2D Marketing Artist",
@@ -556,7 +563,8 @@ window.__GULI_DATA__ = {
           offers: ["Alina Grib", "(выход 20/04/2026)"],
           comment: "",
           priority: "4",
-          division: ""
+          division: "",
+          level: "Middle"
         },
         {
           position: "Unity Developer",
@@ -565,7 +573,8 @@ window.__GULI_DATA__ = {
           offers: ["Ilia Gapomov", "(выход 13/04/2026)"],
           comment: "",
           priority: "4",
-          division: ""
+          division: "",
+          level: "Middle"
         },
         {
           position: "Product Owner",
@@ -574,7 +583,8 @@ window.__GULI_DATA__ = {
           offers: ["Дмитрий Быков", "(выход 22/04/2026)"],
           comment: "",
           priority: "5",
-          division: ""
+          division: "",
+          level: "Middle"
         },
         {
           position: "Project Manager",
@@ -583,7 +593,8 @@ window.__GULI_DATA__ = {
           offers: [],
           comment: "",
           priority: "5",
-          division: ""
+          division: "",
+          level: "Middle"
         },
         {
           position: "Creative Producer",
@@ -592,7 +603,8 @@ window.__GULI_DATA__ = {
           offers: [],
           comment: "",
           priority: "5",
-          division: ""
+          division: "",
+          level: "Senior"
         },
         {
           position: "QA Engineer",
@@ -601,7 +613,8 @@ window.__GULI_DATA__ = {
           offers: [],
           comment: "",
           priority: "5",
-          division: ""
+          division: "",
+          level: "Middle"
         },
         {
           position: "3D Artist",
@@ -610,7 +623,8 @@ window.__GULI_DATA__ = {
           offers: ["Yuliya Medvedeva", "(выход 18/12/2025)"],
           comment: "",
           priority: "5",
-          division: ""
+          division: "",
+          level: "Middle"
         },
         {
           position: "3D Motion Designer +",
@@ -619,7 +633,8 @@ window.__GULI_DATA__ = {
           offers: ["Maxim Dolgov", "(выход 09/02/2026)", "Veronica Luzan", "(выход 13/04/2026)"],
           comment: "",
           priority: "4",
-          division: ""
+          division: "",
+          level: "Middle"
         },
         {
           position: "Cinematic Artist",
@@ -628,7 +643,8 @@ window.__GULI_DATA__ = {
           offers: [],
           comment: "",
           priority: "4",
-          division: ""
+          division: "",
+          level: "Middle"
         },
         {
           position: "3D Artist (Unreal Engine)",
@@ -637,7 +653,8 @@ window.__GULI_DATA__ = {
           offers: [],
           comment: "",
           priority: "2",
-          division: ""
+          division: "",
+          level: "Middle"
         },
         {
           position: "Freelance Motion Designer",
@@ -646,7 +663,8 @@ window.__GULI_DATA__ = {
           offers: [],
           comment: "",
           priority: "4",
-          division: ""
+          division: "",
+          level: "Middle"
         },
         {
           position: "Technical Support",
@@ -655,7 +673,8 @@ window.__GULI_DATA__ = {
           offers: [],
           comment: "",
           priority: "3",
-          division: ""
+          division: "",
+          level: "Junior"
         },
         {
           position: "Level Designer",
@@ -664,7 +683,8 @@ window.__GULI_DATA__ = {
           offers: ["Siarhei Skliarou", "(выход 06/01/2026)", "Evgenia Krot", "(выход 06/01/2026)"],
           comment: "",
           priority: "1",
-          division: ""
+          division: "",
+          level: "Middle"
         },
         {
           position: "Lead QA",
@@ -673,7 +693,8 @@ window.__GULI_DATA__ = {
           offers: [],
           comment: "",
           priority: "1",
-          division: ""
+          division: "",
+          level: "Lead"
         },
         {
           position: "3D Motion Designer (tech lead) +",
@@ -682,7 +703,8 @@ window.__GULI_DATA__ = {
           offers: [],
           comment: "",
           priority: "0",
-          division: ""
+          division: "",
+          level: "Senior"
         },
         {
           position: "Project Manager (в креативную команду)",
@@ -691,7 +713,8 @@ window.__GULI_DATA__ = {
           offers: [],
           comment: "",
           priority: "0",
-          division: ""
+          division: "",
+          level: "Junior"
         },
         {
           position: "Illustrator",
@@ -700,7 +723,8 @@ window.__GULI_DATA__ = {
           offers: ["на стопе"],
           comment: "",
           priority: "0",
-          division: ""
+          division: "",
+          level: "Senior"
         },
         {
           position: "AI Artist",
@@ -709,7 +733,8 @@ window.__GULI_DATA__ = {
           offers: [],
           comment: "",
           priority: "0",
-          division: ""
+          division: "",
+          level: "Middle"
         },
         {
           position: "AI Motion",
@@ -718,8 +743,22 @@ window.__GULI_DATA__ = {
           offers: [],
           comment: "",
           priority: "0",
-          division: ""
+          division: "",
+          level: "Middle"
         }
+        ],
+        dismissals: [
+        { name: "Victoria Kazantseva", role: "", date: "2026", reason: "" },
+        { name: "Alexander Dolgov", role: "", date: "", reason: "" },
+        { name: "Krot Yauheniya", role: "", date: "", reason: "" },
+        { name: "Liapunova Marina", role: "", date: "", reason: "" },
+        { name: "Julia Medvedeva", role: "", date: "", reason: "" }
+        ],
+        offerRefusals: [
+        { year: "2025", name: "Volha Anokhina", role: "Level Designer", reason: "Отказ от оффера. Приняла предложение Belka Games", date: "-" },
+        { year: "2025", name: "Anastasia Galkina", role: "3D Artist", reason: "После принятия оффера, согласования даты выхода и начала формирования договора отказалась от нашего предложения. Причина - не совсем допустимые для Насти пункты в контракте (он был стандартный). Отвечала на сообщения с огромными задержками. Есть предположение, что получила другой оффер с возможно официальным трудоустройством, так как для нас ей требовалось открыть ИП (что не должно быть сильно сложно в Армении)", date: "11/12/2025" },
+        { year: "2026", name: "Yana Zhylskaya", role: "Level Designer", reason: "Я решила принять оффер от другой компании, но это правда было тяжело. Я бы с радостью совместила оба варианта в один, если бы была такая возможность 🥺 У меня птср после глеры и для себя я сейчас вижу более безопасным вариантом пойти туда, где есть много проектов и команды могут переходить между ними. Поэтому тут дело только в моей тревожности и переживаниях.", date: "-" },
+        { year: "2026", name: "Daria Kulikova", role: "Creative Producer", reason: "Приняла контроффер, так как видит для себя там больше возможностей раскрыть свой потенциал и подтянуть точки роста", date: "-" }
         ]
       },
       // %%HIRING_SYNC_END%%
