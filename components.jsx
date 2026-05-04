@@ -1487,15 +1487,10 @@ function HiringTab({ tab }) {
   // ── позиция персонажа в хэдере (зафиксировано) ──────────────────────────
   const charTop  = -83;
   const charLeft =  25;
-  // ── позиция персонажа в блоке "Нанятые в 2026" ──────────────────────────
-  const [char3Top,  setChar3Top]  = React.useState(0);
-  const [char3Left, setChar3Left] = React.useState(0);
-  // ── позиция персонажа в блоке "Отказы" ──────────────────────────────────
-  const [char4Top,  setChar4Top]  = React.useState(110);
-  const [char4Left, setChar4Left] = React.useState(0);
-  // ── позиция персонажа в блоке "Ушли из команды" ─────────────────────────
-  const [char7Top,  setChar7Top]  = React.useState(70);
-  const [char7Left, setChar7Left] = React.useState(40);
+  // ── позиции персонажей (зафиксированы) ───────────────────────────────────
+  const char3Top  = -30; const char3Left = 0;
+  const char4Top  = 110; const char4Left = 0;
+  const char7Top  =  70; const char7Left = 40;
 
   const d            = tab.hiringData || {};
   const funnel       = d.funnel        || [];
@@ -1542,7 +1537,8 @@ function HiringTab({ tab }) {
   const critNoOffer = activeOpen.filter(p => Number(p.priority) >= 5 && countNamedOffers(p.offers) === 0).length;
 
   // ── month stats ───────────────────────────────────────────────────────────
-  const MONTHS_RU = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
+  const MONTHS_RU      = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const MONTHS_RU_PREP = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   const now          = new Date();
   const curM = now.getMonth() + 1;  const curY = now.getFullYear();
   const prevM = curM === 1 ? 12 : curM - 1;
@@ -1698,25 +1694,25 @@ function HiringTab({ tab }) {
             Guli Games · Команда {curY}
           </div>
           <div style={{ fontSize:28,fontWeight:900,color:"#fff",marginBottom:5,lineHeight:1 }}>
-            План найма 2026
+            Hiring Plan 2026
           </div>
-          <div style={{ fontSize:12,color:"rgba(255,255,255,.48)",marginBottom:20,lineHeight:1.5 }}>
-            Актуальные данные о наборе команды:<br/>план, факт, в поиске и приоритеты.
-          </div>
+          <div style={{ marginBottom:20 }}></div>
           <div style={{ display:"flex", gap:0 }}>
             {[
-              { label:"План (слотов)", value:totalSlots,  color:"rgba(255,255,255,.92)" },
-              { label:"Закрыто",       value:closedSlots, color:"#10b981" },
-              { label:"Не закрыто",   value:activeSlots,  color:"#f97316" },
+              { label:"Open roles",  hint: null,                                                              value:activeSlots,  color:"#f97316" },
+              { label:"Critical",    hint:"Highest-priority positions — we close these first",                value:activeOpen.filter(r => Number(r.priority||0) >= 5).length, color:"#ef4444" },
             ].map((m,i) => (
-              <div key={i} style={{
+              <div key={i} title={m.hint||undefined} style={{
                 background:"rgba(8,18,38,.78)", backdropFilter:"blur(12px)",
                 border:"1px solid rgba(255,255,255,.11)",
-                borderRight: i < 2 ? "none" : undefined,
-                borderRadius: i===0?"10px 0 0 10px": i===2?"0 10px 10px 0":"0",
-                padding:"11px 18px"
+                borderRight: i < 1 ? "none" : undefined,
+                borderRadius: i===0?"10px 0 0 10px":"0 10px 10px 0",
+                padding:"11px 18px", cursor: m.hint ? "help" : "default"
               }}>
-                <div style={{ fontSize:9.5,color:"rgba(255,255,255,.42)",fontWeight:600,marginBottom:3 }}>{m.label}</div>
+                <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:3 }}>
+                  <div style={{ fontSize:9.5,color:"rgba(255,255,255,.42)",fontWeight:600 }}>{m.label}</div>
+                  {m.hint && <div style={{ fontSize:9, color:"rgba(255,255,255,.25)", lineHeight:1 }}>ⓘ</div>}
+                </div>
                 <div style={{ fontSize:32,fontWeight:900,lineHeight:1,color:m.color,fontVariantNumeric:"tabular-nums" }}>{m.value}</div>
               </div>
             ))}
@@ -1725,22 +1721,35 @@ function HiringTab({ tab }) {
 
         {/* RIGHT panel — month stats */}
         <div style={{ position:"absolute", right:0, top:0, bottom:0, width:"22%", zIndex:5,
-          display:"flex", flexDirection:"column", justifyContent:"center", padding:"0 36px 0 20px", gap:12 }}>
-          {[
-            { label:`Нанято в ${MONTHS_RU[curM-1].toLowerCase()}`,  value:hiredThisMonth, color:"#00c896" },
-            { label:`Нанято в ${MONTHS_RU[prevM-1].toLowerCase()}`,  value:hiredLastMonth, color:"#818cf8" },
-          ].map((s,i) => (
-            <div key={i} style={{
-              background:"rgba(8,18,38,.72)", backdropFilter:"blur(12px)",
-              border:"1px solid rgba(255,255,255,.1)", borderRadius:12,
-              padding:"14px 18px"
-            }}>
-              <div style={{ fontSize:9,color:"rgba(255,255,255,.38)",fontWeight:700,letterSpacing:.6,textTransform:"uppercase",marginBottom:4 }}>
-                {s.label}
-              </div>
-              <div style={{ fontSize:30,fontWeight:900,color:s.color,lineHeight:1 }}>{s.value}</div>
+          display:"flex", flexDirection:"column", justifyContent:"center", padding:"0 36px 0 20px" }}>
+          <div style={{
+            background:"rgba(8,18,38,.78)", backdropFilter:"blur(14px)",
+            border:"1px solid rgba(255,255,255,.1)", borderRadius:14,
+            overflow:"hidden"
+          }}>
+            {/* Заголовок блока */}
+            <div style={{ padding:"8px 14px 6px", borderBottom:"1px solid rgba(255,255,255,.07)" }}>
+              <div style={{ fontSize:9, fontWeight:800, letterSpacing:1.2, color:"rgba(255,255,255,.35)", textTransform:"uppercase" }}>Hired</div>
             </div>
-          ))}
+            {/* Строки по месяцам */}
+            {[
+              { month: MONTHS_RU[prevM-1],  value: hiredLastMonth, color:"#818cf8" },
+              { month: MONTHS_RU[curM-1],   value: hiredThisMonth, color:"#00c896" },
+            ].map((s,i,arr) => (
+              <div key={i} style={{
+                display:"flex", alignItems:"center", justifyContent:"space-between",
+                padding:"10px 14px",
+                borderBottom: i < arr.length-1 ? "1px solid rgba(255,255,255,.06)" : "none",
+                background: i===arr.length-1 ? `rgba(${s.color==="#00c896"?"0,200,150":"129,140,248"},.05)` : "transparent"
+              }}>
+                <div style={{ fontSize:16, fontWeight:900, color:"#fff", letterSpacing:.3 }}>{s.month}</div>
+                <div style={{ textAlign:"right" }}>
+                  <div style={{ fontSize:24, fontWeight:900, color:s.color, lineHeight:1 }}>{s.value}</div>
+                  <div style={{ fontSize:9, color:"rgba(255,255,255,.3)", marginTop:1 }}>ppl.</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -1755,8 +1764,8 @@ function HiringTab({ tab }) {
             <span style={{ fontSize:14,fontWeight:700,color:"var(--fg-0)" }}>План vs факт по ролям</span>
           </div>
           {/* Column headers */}
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 56px 68px 1fr 100px 90px", gap:6, padding:"9px 18px", borderBottom:"1px solid var(--border)" }}>
-            {["Роль","Нужно","В оффере","В поиске","Приоритет","Уровень"].map(h => (
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 100px 90px", gap:6, padding:"9px 18px", borderBottom:"1px solid var(--border)" }}>
+            {["Role","Searching","Priority","Level"].map(h => (
               <div key={h} style={{ fontSize:9.5,color:"var(--fg-3)",fontWeight:700,textTransform:"uppercase",letterSpacing:.7 }}>{h}</div>
             ))}
           </div>
@@ -1788,7 +1797,7 @@ function HiringTab({ tab }) {
 
             return (
               <div key={i} className="htrow" style={{
-                display:"grid", gridTemplateColumns:"1fr 56px 68px 1fr 100px 90px",
+                display:"grid", gridTemplateColumns:"1fr 1fr 100px 90px",
                 gap:6, padding:"10px 18px",
                 borderBottom: i < activeOpen.length-1 ? "1px solid var(--border)":"none",
                 borderLeft:`3px solid ${pm.color}`,
@@ -1809,13 +1818,9 @@ function HiringTab({ tab }) {
                     {r.position}
                   </span>
                 </div>
-                {/* Нужно */}
-                <div style={{ fontSize:15,fontWeight:700,color:"var(--fg-1)",alignSelf:"center" }}>{r.count||1}</div>
-                {/* В оффере */}
-                <div style={{ fontSize:15,fontWeight:700,color:inOffer>0?"#f97316":"var(--fg-3)",alignSelf:"center" }}>{inOffer}</div>
-                {/* Chips */}
+                {/* Chips — сколько человек ищем */}
                 <div style={{ alignSelf:"center" }}>
-                  <AvatarChips total={r.count||1} filled={inOffer} color={pm.color}/>
+                  <AvatarChips total={r.count||1} filled={0} color={pm.color}/>
                 </div>
                 {/* Priority stars */}
                 <div style={{ display:"flex", alignItems:"center", gap:4, alignSelf:"center" }}>
@@ -1846,24 +1851,16 @@ function HiringTab({ tab }) {
             const critCount = activeOpen.filter(r => Number(r.priority||0) >= 5).length;
             return (
               <div style={{
-                display:"grid", gridTemplateColumns:"1fr 56px 68px 1fr 100px 90px",
+                display:"grid", gridTemplateColumns:"1fr 1fr 100px 90px",
                 gap:6, padding:"12px 18px",
                 borderTop:"2px solid rgba(255,255,255,.1)",
                 background:"rgba(255,255,255,.025)"
               }}>
                 <div style={{ fontSize:10,fontWeight:800,color:"var(--fg-3)",textTransform:"uppercase",letterSpacing:.6,alignSelf:"center" }}>
-                  Итого позиций
-                </div>
-                <div style={{ alignSelf:"center" }}>
-                  <div style={{ fontSize:18,fontWeight:900,color:"var(--fg-0)",lineHeight:1 }}>{activeSlots}</div>
-                  <div style={{ fontSize:9,color:"var(--fg-3)" }}>слотов</div>
-                </div>
-                <div style={{ alignSelf:"center" }}>
-                  <div style={{ fontSize:18,fontWeight:900,color:"#f97316",lineHeight:1 }}>{inProgSlots}</div>
-                  <div style={{ fontSize:9,color:"var(--fg-3)" }}>в оффере</div>
+                  Total: {activeSlots} positions
                 </div>
                 <div style={{ alignSelf:"center" }} />
-                <div style={{ alignSelf:"center", gridColumn:"5 / 7" }}>
+                <div style={{ alignSelf:"center", gridColumn:"3 / 5" }}>
                   {critCount > 0 && (
                     <span className="hpulse" style={{
                       display:"inline-flex", alignItems:"center", gap:6,
@@ -1871,7 +1868,7 @@ function HiringTab({ tab }) {
                       background:"rgba(239,68,68,.12)", border:"1px solid rgba(239,68,68,.3)",
                       color:"#fca5a5", fontSize:11, fontWeight:700
                     }}>
-                      🔴 {critCount} критических позиций
+                      🔴 {critCount} critical positions
                     </span>
                   )}
                 </div>
@@ -1901,8 +1898,8 @@ function HiringTab({ tab }) {
 
           {/* Content */}
           <div style={{ position:"relative", zIndex:2, padding:"24px 22px 20px" }}>
-            <div style={{ fontSize:18, fontWeight:900, color:"#fff", marginBottom:4 }}>Нанятые в 2026</div>
-            <div style={{ fontSize:12, color:"#00c896", fontWeight:700, marginBottom:20 }}>{closedSlots} {closedSlots===1?"человек":closedSlots<5?"человека":"человек"}</div>
+            <div style={{ fontSize:18, fontWeight:900, color:"#fff", marginBottom:4 }}>Hired in 2026</div>
+            <div style={{ fontSize:12, color:"#00c896", fontWeight:700, marginBottom:20 }}>{closedSlots} {closedSlots===1?"person":"people"}</div>
 
             {/* Month groups — только последние 2 месяца */}
             <div style={{ display:"flex", flexDirection:"column", gap:18 }}>
@@ -1915,7 +1912,7 @@ function HiringTab({ tab }) {
                     display:"flex", alignItems:"center", gap:8
                   }}>
                     <div style={{ flex:1, height:1, background:"rgba(255,255,255,.08)" }}/>
-                    {mg.year > 0 ? `${MONTHS_RU[(mg.month||1)-1]} ${mg.year}` : "Без даты"}
+                    {mg.year > 0 ? `${MONTHS_RU[(mg.month||1)-1]} ${mg.year}` : "No date"}
                     <div style={{ flex:1, height:1, background:"rgba(255,255,255,.08)" }}/>
                   </div>
 
@@ -1944,37 +1941,8 @@ function HiringTab({ tab }) {
               ))}
             </div>
 
-            {/* Смотреть всех */}
-            <div style={{ marginTop:20 }}>
-              <span style={{ fontSize:12, color:"#00c896", fontWeight:700, cursor:"pointer", display:"inline-flex", alignItems:"center", gap:5 }}>
-                Смотреть всех <span style={{ fontSize:14 }}>→</span>
-              </span>
-            </div>
           </div>
 
-          {/* Char3 position controls */}
-          <div style={{
-            position:"absolute", bottom:8, left:8, zIndex:10,
-            display:"flex", gap:4, flexWrap:"wrap",
-            background:"rgba(0,0,0,.55)", backdropFilter:"blur(8px)",
-            borderRadius:8, padding:"5px 8px"
-          }}>
-            {[
-              { label:"↑", action:() => setChar3Top(t=>t-10) },
-              { label:"↓", action:() => setChar3Top(t=>t+10) },
-              { label:"←", action:() => setChar3Left(l=>l-10) },
-              { label:"→", action:() => setChar3Left(l=>l+10) },
-            ].map(b => (
-              <button key={b.label} onClick={b.action} style={{
-                background:"rgba(255,255,255,.1)", border:"1px solid rgba(255,255,255,.15)",
-                borderRadius:5, color:"#fff", fontSize:12, width:24, height:24,
-                cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:0
-              }}>{b.label}</button>
-            ))}
-            <span style={{ fontSize:9, color:"rgba(255,255,255,.4)", alignSelf:"center", marginLeft:2 }}>
-              {char3Left},{char3Top}
-            </span>
-          </div>
         </div>
       </div>
 
@@ -1983,27 +1951,6 @@ function HiringTab({ tab }) {
         // Реальные отказы от офферов из таблицы, только текущий год
         const rejCurYear = offerRefusals.filter(r => r.year === String(curY));
         const rejCount   = rejCurYear.length;
-
-        // Вспомогательная панель управления персонажем
-        function CharCtrl({ setTop, setLeft, top, left }) {
-          return (
-            <div style={{
-              position:"absolute", bottom:10, left:10, zIndex:10,
-              display:"flex", gap:3,
-              background:"rgba(0,0,0,.6)", backdropFilter:"blur(8px)",
-              borderRadius:8, padding:"5px 8px", alignItems:"center"
-            }}>
-              {[["↑",()=>setTop(t=>t-10)],["↓",()=>setTop(t=>t+10)],["←",()=>setLeft(l=>l-10)],["→",()=>setLeft(l=>l+10)]].map(([lbl,fn]) => (
-                <button key={lbl} onClick={fn} style={{
-                  background:"rgba(255,255,255,.1)", border:"1px solid rgba(255,255,255,.15)",
-                  borderRadius:5, color:"#fff", fontSize:12, width:24, height:24,
-                  cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:0
-                }}>{lbl}</button>
-              ))}
-              <span style={{ fontSize:9, color:"rgba(255,255,255,.35)", marginLeft:3 }}>{left},{top}</span>
-            </div>
-          );
-        }
 
         return (
           <div className="hb5" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:18, marginTop:18 }}>
@@ -2024,15 +1971,15 @@ function HiringTab({ tab }) {
               }}/>
               {/* Content */}
               <div style={{ position:"relative", zIndex:2, padding:"26px 24px 20px", maxWidth:"52%" }}>
-                <div style={{ fontSize:18, fontWeight:900, color:"#fff", marginBottom:3 }}>Отказы от офферов</div>
-                <div style={{ fontSize:11, color:"rgba(255,255,255,.4)", marginBottom:16 }}>В {curY} году</div>
+                <div style={{ fontSize:18, fontWeight:900, color:"#fff", marginBottom:3 }}>Offer Rejections</div>
+                <div style={{ fontSize:11, color:"rgba(255,255,255,.4)", marginBottom:16 }}>In {curY}</div>
                 <div style={{ fontSize:40, fontWeight:900, color:"#ef4444", lineHeight:1, marginBottom:4 }}>{rejCount}</div>
                 <div style={{ fontSize:12, color:"rgba(255,255,255,.45)", marginBottom:20 }}>
-                  {rejCount===1?"отказ":rejCount<5?"отказа":"отказов"}
+                  {rejCount===1?"rejection":"rejections"}
                 </div>
                 {rejCount > 0 && (
                   <>
-                    <div style={{ fontSize:10, fontWeight:700, color:"rgba(255,255,255,.35)", textTransform:"uppercase", letterSpacing:.8, marginBottom:12 }}>Кто отказался</div>
+                    <div style={{ fontSize:10, fontWeight:700, color:"rgba(255,255,255,.35)", textTransform:"uppercase", letterSpacing:.8, marginBottom:12 }}>Who rejected</div>
                     <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
                       {rejCurYear.map((r,i) => (
                         <div key={i} style={{ borderLeft:"2px solid rgba(239,68,68,.4)", paddingLeft:10 }}>
@@ -2052,7 +1999,6 @@ function HiringTab({ tab }) {
                   <div style={{ fontSize:12, color:"rgba(255,255,255,.3)" }}>Данных пока нет</div>
                 )}
               </div>
-              <CharCtrl top={char4Top} setTop={setChar4Top} left={char4Left} setLeft={setChar4Left}/>
             </div>
 
             {/* ── Ушли из команды ── */}
@@ -2062,18 +2008,18 @@ function HiringTab({ tab }) {
                 <img src="assets/Back02.png" alt="" style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition:"center", display:"block" }}/>
                 <div style={{ position:"absolute", inset:0, background:"linear-gradient(120deg, rgba(3,7,18,.93) 0%, rgba(3,7,18,.78) 45%, rgba(3,7,18,.45) 100%)" }}/>
               </div>
-              {/* Char 7 */}
+              {/* Char 7 — right:90 bottom:-50 size:42% */}
               <img src="assets/7.png" alt="" style={{
                 position:"absolute",
-                right:`calc(0% + ${char7Left}px)`, bottom:`calc(0% + ${-char7Top}px)`,
-                width:"52%", height:"auto", zIndex:1, pointerEvents:"none", userSelect:"none",
+                right:"90px", bottom:"-50px",
+                width:"42%", height:"auto", zIndex:1, pointerEvents:"none", userSelect:"none",
                 filter:"drop-shadow(0 8px 28px rgba(129,140,248,.25))"
               }}/>
               {/* Content */}
               <div style={{ position:"relative", zIndex:2, padding:"26px 24px 70px", maxWidth:"52%" }}>
-                <div style={{ fontSize:18, fontWeight:900, color:"#fff", marginBottom:3 }}>Ушли из команды</div>
+                <div style={{ fontSize:18, fontWeight:900, color:"#fff", marginBottom:3 }}>Left the Team</div>
                 <div style={{ fontSize:12, color:"#818cf8", fontWeight:700, marginBottom:20 }}>
-                  {dismissals.length} {dismissals.length===1?"человек":dismissals.length<5?"человека":"человек"} в {curY}
+                  {dismissals.length} {dismissals.length===1?"person":"people"} in {curY}
                 </div>
                 {dismissals.length === 0 ? (
                   <div style={{ fontSize:12, color:"rgba(255,255,255,.25)", fontStyle:"italic", marginTop:8 }}>
@@ -2101,105 +2047,153 @@ function HiringTab({ tab }) {
                     ))}
                   </div>
                 )}
-                <div style={{ marginTop:22 }}>
-                  <span style={{ fontSize:12, color:"#818cf8", fontWeight:700, cursor:"pointer", display:"inline-flex", alignItems:"center", gap:5 }}>
-                    Смотреть всех <span style={{ fontSize:14 }}>→</span>
-                  </span>
-                </div>
               </div>
-              <CharCtrl top={char7Top} setTop={setChar7Top} left={char7Left} setLeft={setChar7Left}/>
             </div>
 
           </div>
         );
       })()}
 
-      {/* ══ FUNNEL — compact horizontal ══════════════════════════════════════ */}
-      {funnel.length > 0 && (
-        <div className="hb3" style={{ background:"var(--surface-1)", border:"1px solid var(--border)", borderRadius:16, overflow:"hidden", marginBottom:18 }}>
-          <div style={{ display:"flex", alignItems:"center", gap:10, padding:"14px 18px 10px", borderBottom:"1px solid var(--border)" }}>
-            <span style={{ fontSize:13,fontWeight:700,color:"var(--fg-0)" }}>Ключевые узкие места</span>
-            <span style={{ fontSize:11,color:"var(--fg-3)" }}>· среднее время по стадиям воронки</span>
-          </div>
-          <div style={{ display:"grid", gridTemplateColumns:`repeat(${funnel.length},1fr)`, overflowX:"auto" }}>
-            {funnel.map((f,i) => {
-              const isHot = f.avgDays >= 25;
-              const pct   = Math.round((f.avgDays / maxFunnelDays) * 100);
-              return (
-                <div key={i} style={{
-                  padding:"12px 14px", minWidth:90,
-                  borderRight: i < funnel.length-1 ? "1px solid var(--border)":"none",
-                  background: isHot ? "#f9731606":"transparent"
-                }}>
-                  <div style={{ fontSize:9.5,color:"var(--fg-3)",marginBottom:8,lineHeight:1.3 }}>
-                    {isHot && <span style={{color:"#f97316"}}>● </span>}{f.stage}
-                  </div>
-                  <div style={{ position:"relative",height:3,background:"var(--border)",borderRadius:2,marginBottom:8 }}>
-                    <div className="hbr" style={{
-                      "--bw":`${pct}%`, position:"absolute",left:0,top:0,bottom:0,
-                      width:`${pct}%`, background:isHot?"#f97316":"#00c896", borderRadius:2
-                    }}/>
-                  </div>
-                  <div style={{ fontSize:20,fontWeight:800,color:isHot?"#f97316":"var(--fg-1)" }}>
-                    {f.avgDays}<span style={{fontSize:9,fontWeight:400,color:"var(--fg-3)",marginLeft:2}}>дн</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
-      {/* ══ BOTTOM 2-COL: Узкие места + Что делаем ══════════════════════════ */}
-      <div className="hb4" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:18 }}>
+      {/* ══ BOTTOM STACK: Recruiting Capacity + Key Issues ══════════════════ */}
+      <div className="hb4" style={{ display:"flex", flexDirection:"column", gap:18, marginTop:18 }}>
 
-        {/* Узкие места */}
-        <div style={{ background:"var(--surface-1)", border:"1px solid var(--border)", borderRadius:16, padding:"20px" }}>
-          <div style={{ fontSize:13,fontWeight:700,color:"var(--fg-0)",marginBottom:16 }}>Ключевые узкие места</div>
-          <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
-            {[
-              { icon:"⏱", title:"Долгий цикл найма", desc:"Среднее время закрытия ролей слишком высокое. Особенно по senior и creative." },
-              { icon:"❌", title:"Потери на оффере",  desc:"Кандидаты уходят к конкурентам или сомневаются на этапе принятия решения." },
-              { icon:"👥", title:"Слабый поток кандидатов", desc:"Недостаточный входящий поток на ключевые позиции (Motion, Creative, QA)." },
-            ].map((b,i) => (
-              <div key={i} style={{ display:"flex", gap:12, alignItems:"flex-start" }}>
-                <div style={{ width:36,height:36,borderRadius:10,background:"#ef444412",border:"1px solid #ef444428",
-                  flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17 }}>{b.icon}</div>
+        {/* ── Recruiting Capacity ── */}
+        <div style={{ position:"relative", borderRadius:16, overflow:"hidden", border:"1px solid rgba(255,255,255,.13)", height:190, boxShadow:"0 1px 3px rgba(0,0,0,.4)", background:"#000" }}>
+          {/* Character image — right side, left:30 top:0 size:102% */}
+          <div style={{ position:"absolute", right:0, top:0, bottom:0, width:"50%", zIndex:0, overflow:"hidden" }}>
+            <img src="assets/10.png" alt="" style={{
+              position:"absolute", left:"calc(50% + 30px)", top:0,
+              transform:"translateX(-50%)",
+              height:"102%", objectFit:"contain", display:"block"
+            }}/>
+          </div>
+          {/* Content — left side */}
+          <div style={{ position:"relative", zIndex:3, height:"100%", display:"flex", alignItems:"center", padding:"0 32px", gap:40, width:"58%" }}>
+            <div>
+              <div style={{ fontSize:18, fontWeight:900, color:"#fff", marginBottom:10 }}>Recruiting Capacity</div>
+              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                <div style={{ width:40, height:40, borderRadius:10, flexShrink:0,
+                  background:"rgba(129,140,248,.15)", border:"1px solid rgba(129,140,248,.4)",
+                  display:"flex", alignItems:"center", justifyContent:"center", fontSize:20 }}>👤</div>
                 <div>
-                  <div style={{ fontSize:12,fontWeight:700,color:"var(--fg-0)",marginBottom:2 }}>{b.title}</div>
-                  <div style={{ fontSize:11,color:"var(--fg-3)",lineHeight:1.45 }}>{b.desc}</div>
+                  <div style={{ display:"flex", alignItems:"baseline", gap:7 }}>
+                    <span style={{ fontSize:36, fontWeight:900, color:"#818cf8", lineHeight:1 }}>1</span>
+                    <span style={{ fontSize:14, fontWeight:700, color:"rgba(255,255,255,.7)" }}>recruiter</span>
+                  </div>
+                  <div style={{ fontSize:11, color:"rgba(255,255,255,.4)" }}>Ivanna Turtsevich</div>
                 </div>
               </div>
-            ))}
+            </div>
+            <div style={{ width:1, height:48, background:"rgba(255,255,255,.1)", flexShrink:0 }}/>
+            <div style={{ fontSize:13, color:"rgba(255,255,255,.55)", lineHeight:1.6 }}>
+              Ведёт весь найм по всем направлениям<br/>
+              <span style={{ color:"#818cf8", fontWeight:600 }}>→</span> Один рекрутер — ограничивающий фактор скорости найма
+            </div>
           </div>
         </div>
 
-        {/* Что делаем дальше */}
-        <div style={{ background:"var(--surface-1)", border:"1px solid var(--border)", borderRadius:16, padding:"20px" }}>
-          <div style={{ fontSize:13,fontWeight:700,color:"var(--fg-0)",marginBottom:16 }}>Что делаем дальше</div>
-          <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
-            {[
-              { icon:"🎯", title:"Ускорить закрытие Motion (4 слота)", desc:"Сфокусироваться на быстром закрытии ключевой роли." },
-              { icon:"🤝", title:"Снизить отказы от офферов",          desc:"Улучшить предложение и процесс коммуникации с кандидатами." },
-              { icon:"👔", title:"Усилить поток на Creative Producer",  desc:"Критичная роль — влияет на весь крео-процесс команды." },
-              { icon:"🛡", title:"Стабилизировать команду (churn)",     desc:"Работать с удержанием и мотивацией текущих сотрудников." },
-            ].map((a,i) => (
-              <div key={i} style={{ display:"flex", gap:12, alignItems:"flex-start" }}>
-                <div style={{ width:36,height:36,borderRadius:10,background:"#00c89612",border:"1px solid #00c89622",
-                  flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17 }}>{a.icon}</div>
-                <div>
-                  <div style={{ fontSize:12,fontWeight:700,color:"var(--fg-0)",marginBottom:2 }}>{a.title}</div>
-                  <div style={{ fontSize:11,color:"var(--fg-3)",lineHeight:1.45 }}>{a.desc}</div>
-                </div>
+        {/* ── Key Issues (from Huntflow) ── */}
+        {(() => {
+          // Динамически вычисляем проблемы из данных Huntflow
+          const issues = [];
+
+          // 1. Самые медленные этапы воронки
+          const slowStages = [...funnel].sort((a,b) => b.avgDays - a.avgDays).slice(0, 2);
+          if (slowStages[0]) {
+            issues.push({
+              svg: (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+              ),
+              title: `Медленный цикл найма`,
+              highlight: null,
+              desc: `Этап "${slowStages[0].stage}" занимает ${slowStages[0].avgDays} дн. — кандидаты слишком долго ждут перехода на следующий шаг`
+            });
+          }
+
+          // 2. Offer acceptance rate
+          const summaryData = d.summary || {};
+          if (summaryData.offersAccepted && summaryData.offersAccepted !== "—") {
+            const parts = String(summaryData.offersAccepted).split("/").map(Number);
+            if (parts.length === 2 && parts[1] > 0) {
+              const rate = Math.round(parts[0] / parts[1] * 100);
+              issues.push({
+                svg: (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="18" height="18">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+                  </svg>
+                ),
+                title: `Низкий процент принятых офферов — `,
+                highlight: `${rate}%`,
+                desc: `(цель: 70%) — кандидаты отказываются или принимают офферы конкурентов`
+              });
+            }
+          }
+
+          // 3. Avg TTF
+          if (summaryData.avgTTF && summaryData.avgTTF > 60) {
+            issues.push({
+              svg: (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              ),
+              title: `Слабый поток кандидатов`,
+              highlight: null,
+              desc: `Среднее время закрытия — ${summaryData.avgTTF} дн. Недостаточный входящий поток на ключевые роли (Motion, Creative, QA)`
+            });
+          }
+
+          // 4. Второй медленный этап
+          if (slowStages[1] && slowStages[1].avgDays >= 20) {
+            issues.push({
+              svg: (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              ),
+              title: `Узкое место: "${slowStages[1].stage}" — `,
+              highlight: `${slowStages[1].avgDays} дн.`,
+              desc: `Этот этап существенно замедляет общий процесс подбора`
+            });
+          }
+
+          return (
+            <div style={{ background:"var(--surface-1)", border:"1px solid rgba(255,255,255,.13)", borderRadius:16, padding:"22px 20px", boxShadow:"0 1px 3px rgba(0,0,0,.4)" }}>
+              <div style={{ fontSize:18, fontWeight:900, color:"#fff", marginBottom:16 }}>Key Issues</div>
+              <div style={{ display:"grid", gridTemplateColumns:`repeat(${issues.length}, 1fr)`, gap:12 }}>
+                {issues.map((issue, i) => (
+                  <div key={i} style={{
+                    display:"flex", flexDirection:"column", gap:12,
+                    background:"rgba(239,68,68,.05)", border:"1px solid rgba(239,68,68,.12)",
+                    borderRadius:12, padding:"14px 14px"
+                  }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                      <div style={{ width:32, height:32, borderRadius:9, flexShrink:0,
+                        background:"rgba(239,68,68,.12)", border:"1px solid rgba(239,68,68,.25)",
+                        display:"flex", alignItems:"center", justifyContent:"center", color:"#ef4444" }}>
+                        {issue.svg}
+                      </div>
+                      <div style={{ fontSize:12, fontWeight:700, color:"var(--fg-0)", lineHeight:1.35 }}>
+                        {issue.title}
+                        {issue.highlight && <span style={{ color:"#ef4444" }}>{issue.highlight}</span>}
+                      </div>
+                    </div>
+                    <div style={{ fontSize:11, color:"var(--fg-3)", lineHeight:1.55 }}>{issue.desc}</div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          );
+        })()}
       </div>
 
       {updatedAt && (
         <div style={{ fontSize:10,color:"var(--fg-3)",marginTop:22,textAlign:"right",opacity:.5 }}>
-          обновлено {updatedAt} · Google Sheets + Huntflow
+          updated {updatedAt} · Google Sheets + Huntflow
         </div>
       )}
     </div>
