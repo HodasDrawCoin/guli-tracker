@@ -24,8 +24,8 @@ window.__GULI_DATA__ = {
   meta: {
     company: "Guli Games",
     product: "Legendale",
-    reportPeriod: "Апрель 2026",
-    lastSync: "2026-04-30 17:25",
+    reportPeriod: "Май 2026",
+    lastSync: "2026-05-05 17:49",
     investorNote: "Внутренний tracker. Обновляется по мере прогресса. Цифры рабочие."
   },
 
@@ -35,8 +35,8 @@ window.__GULI_DATA__ = {
   kpis: [
     { id: "stores",   label: "Сторов в работе",       value: "3",   sub: "G5 · Amazon · Windows" },
     { id: "webshops", label: "Веб-шопов в проде",     value: "2",   sub: "Aghanim · Toffee" },
-    { id: "playables",label: "Playables в pipeline",  value: "3",  sub: "1 готовы · 3 в работе" },
-    { id: "creo",     label: "Креативов / мес",       value: "~29", sub: "in-house + freelance + outsource" }
+    { id: "playables",label: "Playables в pipeline",  value: "3",  sub: "0 готовы · 3 в работе" },
+    { id: "creo",     label: "Креативов / мес",       value: "~14", sub: "in-house + freelance + outsource" }
   ],
 
   // -----------------------------------------------------------------------
@@ -199,16 +199,16 @@ window.__GULI_DATA__ = {
       // -----------------------------------------------------------------
       // %%NOTION_SYNC_START%%
       production: {
-        period: "Апрель 2026",
+        period: "Май 2026",
         creatives: {
           label: "Креативы",
-          planNow: 29,
+          planNow: 14,
           planTarget: 45,
-          inProgress: 13,
-          doneThisMonth: 16,
+          inProgress: 11,
+          doneThisMonth: 3,
           breakdown: {
-            inhouse:   { count: 6, note: "In-house" },
-            freelance: { count: 36, note: "Фрилансеры · 5 чел. · дедлайн: 17.04" },
+            inhouse:   { count: 0, note: "In-house" },
+            freelance: { count: 14, note: "Фрилансеры · 3 чел. · дедлайн: 04.05" },
             outsource: {
               count: 0,
               vendors: [
@@ -218,30 +218,44 @@ window.__GULI_DATA__ = {
           },
           calendar: {
             done: [
-                { date: "2026-04-03", inhouse: 0, freelance: 2, outsource: 0 },
-                { date: "2026-04-07", inhouse: 1, freelance: 1, outsource: 0 },
-                { date: "2026-04-10", inhouse: 0, freelance: 3, outsource: 0 },
-                { date: "2026-04-14", inhouse: 1, freelance: 2, outsource: 0 },
-                { date: "2026-04-17", inhouse: 2, freelance: 0, outsource: 0 },
-                { date: "2026-04-22", inhouse: 0, freelance: 2, outsource: 0 },
-                { date: "2026-04-25", inhouse: 1, freelance: 1, outsource: 0 }
+                { date: "2026-04-02", inhouse: 0, freelance: 1, outsource: 0 },
+                { date: "2026-04-04", inhouse: 0, freelance: 2, outsource: 0 },
+                { date: "2026-04-06", inhouse: 1, freelance: 0, outsource: 0 },
+                { date: "2026-04-08", inhouse: 1, freelance: 0, outsource: 0 },
+                { date: "2026-04-09", inhouse: 0, freelance: 0, outsource: 1 },
+                { date: "2026-04-14", inhouse: 0, freelance: 1, outsource: 0 },
+                { date: "2026-04-15", inhouse: 0, freelance: 1, outsource: 0 },
+                { date: "2026-04-16", inhouse: 0, freelance: 4, outsource: 0 },
+                { date: "2026-04-17", inhouse: 1, freelance: 0, outsource: 0 },
+                { date: "2026-04-21", inhouse: 1, freelance: 3, outsource: 0 },
+                { date: "2026-04-22", inhouse: 1, freelance: 3, outsource: 0 },
+                { date: "2026-04-24", inhouse: 1, freelance: 0, outsource: 0 },
+                { date: "2026-04-27", inhouse: 1, freelance: 0, outsource: 0 },
+                { date: "2026-04-28", inhouse: 0, freelance: 1, outsource: 0 },
+                { date: "2026-04-30", inhouse: 0, freelance: 5, outsource: 0 },
+                { date: "2026-05-04", inhouse: 0, freelance: 1, outsource: 0 },
+                { date: "2026-05-06", inhouse: 0, freelance: 1, outsource: 0 },
+                { date: "2026-05-12", inhouse: 0, freelance: 1, outsource: 0 }
             ],
             planned: [
-                { date: "2026-05-05", inhouse: 1, freelance: 3, outsource: 0 },
-                { date: "2026-05-09", inhouse: 1, freelance: 4, outsource: 0 },
-                { date: "2026-05-14", inhouse: 1, freelance: 3, outsource: 0 },
-                { date: "2026-05-19", inhouse: 1, freelance: 2, outsource: 0 }
+                { date: "2026-04-25", inhouse: 0, freelance: 1, outsource: 0 },
+                { date: "2026-04-30", inhouse: 1, freelance: 0, outsource: 0 },
+                { date: "2026-05-04", inhouse: 0, freelance: 1, outsource: 0 },
+                { date: "2026-05-06", inhouse: 0, freelance: 1, outsource: 0 },
+                { date: "2026-05-11", inhouse: 0, freelance: 3, outsource: 0 },
+                { date: "2026-05-12", inhouse: 0, freelance: 4, outsource: 0 },
+                { date: "2026-05-29", inhouse: 0, freelance: 2, outsource: 0 }
             ]
           }
         },
         playables: {
           label: "Playables",
-          planNow: 4,
+          planNow: 3,
           planTarget: 12,
           inProgress: 3,
-          doneThisMonth: 1,
+          doneThisMonth: 0,
           breakdown: {
-            inhouse:   { count: 1, note: "In-house" },
+            inhouse:   { count: 0, note: "In-house" },
             freelance: { count: 0, note: "Фрилансеры" },
             outsource: {
               count: 3,
@@ -252,12 +266,10 @@ window.__GULI_DATA__ = {
           },
           calendar: {
             done: [
-                { date: "2026-04-28", inhouse: 0, freelance: 0, outsource: 1 }
+                { date: "2026-04-14", inhouse: 1, freelance: 0, outsource: 0 }
             ],
             planned: [
-                { date: "2026-05-08", inhouse: 0, freelance: 0, outsource: 1 },
-                { date: "2026-05-15", inhouse: 0, freelance: 0, outsource: 1 },
-                { date: "2026-05-22", inhouse: 0, freelance: 0, outsource: 1 }
+                { date: "2026-05-11", inhouse: 0, freelance: 0, outsource: 3 }
             ]
           }
         }
@@ -293,31 +305,28 @@ window.__GULI_DATA__ = {
           {
             id: "creators",
             label: "Creators",
-            count: 4,
+            count: 5,
             type: "freelance",
-            note: "4 freelancers",
+            note: "5 человек на фрилансе",
             members: [
               // %%CREATORS_SYNC_START%%
-              { name: "Vlad",   role: "Creator · freelance", status: "active" },
+              { name: "Max L", role: "Creator · freelance", status: "active" },
+              { name: "Olga Tagakova", role: "Creator · freelance", status: "active" },
+              { name: "Roman Bondarenko", role: "Creator · freelance", status: "active" },
               { name: "Sergey", role: "Creator · freelance", status: "active" },
-              { name: "Igor",   role: "Creator · freelance", status: "active" },
-              { name: "Kirill", role: "Creator · freelance", status: "active" }
+              { name: "Veronika", role: "Creator · freelance", status: "active" }
               // %%CREATORS_SYNC_END%%
             ]
           },
           {
             id: "outsource",
             label: "Outsource",
-            count: 5,
+            count: 1,
             type: "outsource",
-            note: "Studios & agencies",
+            note: "Студии и агентства",
             members: [
               // %%OUTSOURCE_SYNC_START%%
-              { name: "CAS",        role: "Outsource studio", status: "active" },
-              { name: "Mambo",      role: "Outsource studio", status: "active" },
-              { name: "Alchemia",   role: "Outsource studio", status: "active" },
-              { name: "RAD",        role: "Outsource studio", status: "active" },
-              { name: "GG My.Games",role: "Outsource studio", status: "active" }
+              { name: "BNG", role: "Outsource studio", status: "active" }
               // %%OUTSOURCE_SYNC_END%%
             ]
           }
@@ -330,7 +339,7 @@ window.__GULI_DATA__ = {
           status: "in_progress",
           progress: 60,
           updatedAt: "2026-05-01",
-          summary: "In-house: Maxim Dolgov (Motion Lead) + Veronika Luzan. В поиске: 3D Motion Designer x2, Freelance Motion Designer x3, Creative Producer x1.",
+          summary: "In-house: Motion x2. В поиске: —.",
           ownersInternal: ["Maxim Dolgov (Motion Lead)", "Veronika Luzan"],
           counterparties: [],
           stepsLabel: "Открытые позиции",
@@ -349,8 +358,8 @@ window.__GULI_DATA__ = {
           ],
           metrics: {
             "In-house": "2 чел.",
-            "В поиске · Motion": "5 позиций",
-            "В поиске · Creo Prod": "1 позиция",
+            "В поиске · Motion": "0 позиц.",
+            "В поиске · Creo Prod": "0 позиц.",
             "AI usage": "Intro / Outro"
           },
           links: []
@@ -464,7 +473,7 @@ window.__GULI_DATA__ = {
       subtitle: "Hiring и состав",
       // %%HIRING_SYNC_START%%
       hiringData: {
-        updatedAt: "2026-05-04",
+        updatedAt: "2026-05-06",
         summary: {
           openPositions: 0,
           offersAccepted: "3/18",
@@ -607,20 +616,20 @@ window.__GULI_DATA__ = {
           level: "Senior"
         },
         {
-          position: "QA Engineer",
-          count: 1,
+          position: "QA Engineer (фичи и контент)",
+          count: 2,
           closed: false,
           offers: [],
           comment: "",
           priority: "5",
           division: "",
-          level: "Middle"
+          level: "Middle, Junior"
         },
         {
           position: "3D Artist",
-          count: 3,
+          count: 2,
           closed: false,
-          offers: ["Yuliya Medvedeva", "(выход 18/12/2025)"],
+          offers: ["Yuliya Medvedeva", "(выход 18/12/2025)", "Artem Armashov", "(выход 11/05/2026)"],
           comment: "",
           priority: "5",
           division: "",
@@ -647,16 +656,6 @@ window.__GULI_DATA__ = {
           level: "Middle"
         },
         {
-          position: "3D Artist (Unreal Engine)",
-          count: 1,
-          closed: false,
-          offers: [],
-          comment: "",
-          priority: "2",
-          division: "",
-          level: "Middle"
-        },
-        {
           position: "Freelance Motion Designer",
           count: 3,
           closed: false,
@@ -677,6 +676,16 @@ window.__GULI_DATA__ = {
           level: "Junior"
         },
         {
+          position: "Playable ads developer",
+          count: 1,
+          closed: false,
+          offers: [],
+          comment: "",
+          priority: "3",
+          division: "",
+          level: "Middle"
+        },
+        {
           position: "Level Designer",
           count: 1,
           closed: false,
@@ -684,17 +693,7 @@ window.__GULI_DATA__ = {
           comment: "",
           priority: "1",
           division: "",
-          level: "Middle"
-        },
-        {
-          position: "Lead QA",
-          count: 1,
-          closed: false,
-          offers: [],
-          comment: "",
-          priority: "1",
-          division: "",
-          level: "Lead"
+          level: "Middle, Junior"
         },
         {
           position: "3D Motion Designer (tech lead) +",
@@ -707,6 +706,16 @@ window.__GULI_DATA__ = {
           level: "Senior"
         },
         {
+          position: "Lead QA",
+          count: 1,
+          closed: false,
+          offers: [],
+          comment: "",
+          priority: "0",
+          division: "",
+          level: "Lead"
+        },
+        {
           position: "Project Manager (в креативную команду)",
           count: 1,
           closed: false,
@@ -717,10 +726,20 @@ window.__GULI_DATA__ = {
           level: "Junior"
         },
         {
+          position: "3D Artist (Unreal Engine)",
+          count: 1,
+          closed: false,
+          offers: [],
+          comment: "",
+          priority: "0",
+          division: "",
+          level: "Middle"
+        },
+        {
           position: "Illustrator",
           count: 1,
           closed: false,
-          offers: ["на стопе"],
+          offers: [],
           comment: "",
           priority: "0",
           division: "",
@@ -748,11 +767,12 @@ window.__GULI_DATA__ = {
         }
         ],
         dismissals: [
-        { name: "Victoria Kazantseva", role: "", date: "2026", reason: "" },
-        { name: "Alexander Dolgov", role: "", date: "", reason: "" },
-        { name: "Krot Yauheniya", role: "", date: "", reason: "" },
-        { name: "Liapunova Marina", role: "", date: "", reason: "" },
-        { name: "Julia Medvedeva", role: "", date: "", reason: "" }
+        { name: "Alexander Dolgov", role: "2D Marketing Artist", date: "27-02-2026", reason: "Обоюдно" },
+        { name: "Victoria Kazantseva", role: "PM", date: "02-03-2026", reason: "По собственному желанию" },
+        { name: "Anastasia Kazachok", role: "Lead QA", date: "05-03-2026", reason: "По собственному желанию" },
+        { name: "Krot Yauheniya", role: "LD", date: "09-03-2026", reason: "Инициатива компании" },
+        { name: "Liapunova Marina", role: "QA", date: "23-03-2026", reason: "По собственному желанию" },
+        { name: "Julia Medvedeva", role: "3D Artist", date: "17-04-2026", reason: "По собственному желанию" }
         ],
         offerRefusals: [
         { year: "2025", name: "Volha Anokhina", role: "Level Designer", reason: "Отказ от оффера. Приняла предложение Belka Games", date: "-" },
@@ -788,6 +808,14 @@ window.__GULI_DATA__ = {
   // Сравнение с localStorage по дате последнего визита.
   // -----------------------------------------------------------------------
   changelog: [
+    { date: "2026-05-05", tab: "creo", text: "Синх. с Notion (05/2026): крео 3 готово · 11 в работе; playables 0 · 3." },
+    { date: "2026-05-05", tab: "creo", text: "Синх. с Notion (05/2026): крео 3 готово · 11 в работе; playables 0 · 3." },
+    { date: "2026-05-05", tab: "creo", text: "Синх. с Notion (05/2026): крео 3 готово · 9 в работе; playables 0 · 3." },
+    { date: "2026-05-05", tab: "creo", text: "Синх. с Notion (05/2026): крео 3 готово · 9 в работе; playables 0 · 3." },
+    { date: "2026-05-05", tab: "creo", text: "Синх. с Notion (05/2026): крео 3 готово · 9 в работе; playables 0 · 3." },
+    { date: "2026-05-05", tab: "creo", text: "Синх. с Notion (05/2026): крео 3 готово · 8 в работе; playables 0 · 3." },
+    { date: "2026-05-05", tab: "creo", text: "Синх. с Notion (05/2026): крео 3 готово · 8 в работе; playables 0 · 3." },
+    { date: "2026-05-05", tab: "creo", text: "Синх. с Notion (05/2026): крео 0 готово · 0 в работе; playables 0 · 0." },
     { date: "2026-04-30", tab: "creo", text: "Синх. с Notion (04/2026): крео 16 готово · 13 в работе; playables 1 · 3." },
     { date: "2026-04-30", tab: "creo", text: "Синх. с Notion (04/2026): крео 16 готово · 13 в работе; playables 1 · 3." },
     { date: "2026-04-29", tab: "creo", text: "Синх. с Notion (04/2026): крео 13 готово · 13 в работе; playables 1 · 3." },

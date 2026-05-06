@@ -513,32 +513,30 @@ function SourceCalendar({ calendar, accent, period }) {
     { label: `${MONTH_EN[curM]}  ${curY}`,  days: buildDays(curY,  curM),  year: curY,  month: curM  }
   ];
 
-  const doneMap = {}, plannedMap = {};
-  (calendar.done    || []).forEach(d => { doneMap[d.date]    = d; });
-  (calendar.planned || []).forEach(d => { plannedMap[d.date] = d; });
+  // Суммируем все источники в одно число на дату
+  const doneMap = {}, inProgressMap = {};
+  (calendar.done    || []).forEach(d => {
+    doneMap[d.date] = (d.inhouse||0) + (d.freelance||0) + (d.outsource||0);
+  });
+  (calendar.planned || []).forEach(d => {
+    inProgressMap[d.date] = (d.inhouse||0) + (d.freelance||0) + (d.outsource||0);
+  });
 
-  const sources = [
-    { key: "inhouse",   label: "In-house",  color: "#34d399" },
-    { key: "freelance", label: "Freelance", color: "#818cf8" },
-    { key: "outsource", label: "Outsource", color: "#f59e0b" },
+  const rows = [
+    { key: "done",       label: "Done",        color: "#34d399", map: doneMap },
+    { key: "inprogress", label: "In Progress",  color: "#f59e0b", map: inProgressMap },
   ];
 
-  function getMonthTotals(y, m) {
+  function getMonthTotal(map, y, m) {
     const ms = `${y}-${String(m+1).padStart(2,"0")}`;
-    const t = { inhouse: 0, freelance: 0, outsource: 0 };
-    [...(calendar.done || []), ...(calendar.planned || [])]
-      .filter(d => d.date.startsWith(ms))
-      .forEach(d => { t.inhouse += d.inhouse||0; t.freelance += d.freelance||0; t.outsource += d.outsource||0; });
-    return t;
+    return Object.entries(map).filter(([d]) => d.startsWith(ms)).reduce((s, [,v]) => s + v, 0);
   }
 
-  const LABELW = 66, TOTALW = 46;
+  const LABELW = 74, TOTALW = 40;
 
   return (
     <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--line)" }}>
       {months.map(({ label, days, year, month }, idx) => {
-        const mt    = getMonthTotals(year, month);
-        const mSum  = mt.inhouse + mt.freelance + mt.outsource;
         return (
           <div key={label} style={{ marginBottom: 10 }}>
             {idx > 0 && (
@@ -565,49 +563,46 @@ function SourceCalendar({ calendar, accent, period }) {
               </div>
               <div style={{ width: TOTALW, flexShrink: 0 }} />
             </div>
-            {/* Строки по источникам */}
-            {sources.map(src => {
-              const srcTotal = mt[src.key] || 0;
-              const srcPct   = mSum ? Math.round(srcTotal / mSum * 100) : 0;
+            {/* Строки: Done и In Progress */}
+            {rows.map(row => {
+              const total = getMonthTotal(row.map, year, month);
               return (
-                <div key={src.key} style={{ display: "flex", alignItems: "center", marginBottom: 2 }}>
+                <div key={row.key} style={{ display: "flex", alignItems: "center", marginBottom: 2 }}>
                   {/* Лейбл */}
                   <div style={{ width: LABELW, flexShrink: 0, display: "flex", alignItems: "center", gap: 5 }}>
-                    <span style={{ width: 7, height: 7, borderRadius: 2, background: src.color, flexShrink: 0 }} />
-                    <span style={{ fontSize: 10, color: "var(--fg-2)", fontWeight: 500, whiteSpace: "nowrap" }}>{src.label}</span>
+                    <span style={{ width: 7, height: 7, borderRadius: 2,
+                      background: row.key === "done" ? row.color : "transparent",
+                      border: row.key === "done" ? "none" : `1.5px dashed ${row.color}`,
+                      flexShrink: 0 }} />
+                    <span style={{ fontSize: 10, color: "var(--fg-2)", fontWeight: 500, whiteSpace: "nowrap" }}>{row.label}</span>
                   </div>
                   {/* Квадраты */}
                   <div style={{ flex: 1, display: "grid", gridTemplateColumns: `repeat(${days.length}, 1fr)`, gap: 1 }}>
                     {days.map(dateStr => {
-                      const done    = doneMap[dateStr]    || {};
-                      const planned = plannedMap[dateStr] || {};
-                      const dc = done[src.key]    || 0;
-                      const pc = planned[src.key] || 0;
-                      const tot = dc + pc;
-                      const isToday  = dateStr === todayStr;
-                      const isDone   = dc > 0;
-                      if (tot === 0) return (
+                      const count = row.map[dateStr] || 0;
+                      const isToday = dateStr === todayStr;
+                      if (count === 0) return (
                         <div key={dateStr} style={{ aspectRatio: "1", borderRadius: 2,
-                          background: isToday ? `${src.color}15` : "rgba(255,255,255,0.03)",
-                          border: `1px solid ${isToday ? src.color+"30" : "rgba(255,255,255,0.05)"}` }} />
+                          background: isToday ? `${row.color}15` : "rgba(255,255,255,0.03)",
+                          border: `1px solid ${isToday ? row.color+"30" : "rgba(255,255,255,0.05)"}` }} />
                       );
+                      const isDone = row.key === "done";
                       return (
                         <div key={dateStr} style={{ aspectRatio: "1", borderRadius: 2,
-                          background: isDone ? `${src.color}cc` : `${src.color}22`,
-                          border: `1px solid ${src.color}${isDone ? "99" : "44"}`,
+                          background: isDone ? `${row.color}cc` : `${row.color}22`,
+                          border: `1px solid ${row.color}${isDone ? "99" : "55"}`,
                           borderStyle: isDone ? "solid" : "dashed",
                           display: "flex", alignItems: "center", justifyContent: "center",
                           fontSize: 8, fontWeight: 700, fontVariantNumeric: "tabular-nums",
-                          color: isDone ? "#fff" : src.color }}>
-                          {tot}
+                          color: isDone ? "#fff" : row.color }}>
+                          {count}
                         </div>
                       );
                     })}
                   </div>
                   {/* Итог */}
-                  <div style={{ width: TOTALW, flexShrink: 0, textAlign: "right", paddingLeft: 6, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 3 }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: "var(--fg-0)", fontVariantNumeric: "tabular-nums" }}>{srcTotal}</span>
-                    {mSum > 0 && <span style={{ fontSize: 9, color: "var(--fg-3)" }}>{srcPct}%</span>}
+                  <div style={{ width: TOTALW, flexShrink: 0, textAlign: "right", paddingLeft: 6 }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "var(--fg-0)", fontVariantNumeric: "tabular-nums" }}>{total}</span>
                   </div>
                 </div>
               );
@@ -615,17 +610,6 @@ function SourceCalendar({ calendar, accent, period }) {
           </div>
         );
       })}
-      {/* Легенда */}
-      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-          <div style={{ width: 8, height: 8, borderRadius: 2, background: "rgba(255,255,255,0.4)" }} />
-          <span style={{ fontSize: 9, color: "var(--fg-3)" }}>Done</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-          <div style={{ width: 8, height: 8, borderRadius: 2, border: "1px dashed rgba(255,255,255,0.3)" }} />
-          <span style={{ fontSize: 9, color: "var(--fg-3)" }}>Planned</span>
-        </div>
-      </div>
     </div>
   );
 }
@@ -982,18 +966,6 @@ function CreoVolumeCard({ block, accent, period }) {
         </div>
       </div>
 
-      {/* Prev month delivered strip */}
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "6px 10px", borderRadius: 7, marginBottom: 12,
-        background: "rgba(255,255,255,0.02)", border: `1px solid ${accent}10`,
-      }}>
-        <span style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: 0.5 }}>
-          {prevShort} delivered
-        </span>
-        <span style={{ fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.55)", fontVariantNumeric: "tabular-nums" }}>{sdanoPrev}</span>
-        <span style={{ fontSize: 9, color: "rgba(255,255,255,0.25)" }}>→ {nextShort} planned: <b style={{ color: accent }}>{workNext}</b></span>
-      </div>
 
       {/* Source calendar */}
       <SourceCalendar calendar={block.calendar} accent={accent} period={period} />
@@ -2042,6 +2014,11 @@ function HiringTab({ tab }) {
                           <div style={{ fontSize:11, color:"rgba(255,255,255,.4)", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
                             {dis.role}{dis.date ? ` · ${dis.date}` : ""}
                           </div>
+                          {dis.reason && (
+                            <div style={{ fontSize:10, color:"rgba(255,255,255,.25)", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", marginTop:1 }}>
+                              {dis.reason}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
